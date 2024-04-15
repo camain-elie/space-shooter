@@ -1,10 +1,21 @@
-let isWorldSaved: boolean = false
-
-export function saveTheWorld(): string {
-    if (isWorldSaved) {
-        return `Too late, world has already been saved`
-    } else {
-        isWorldSaved = true
-        return `Hurray, you just saved the world`
-    }
+function startGame() {
+    myGameArea.start()
 }
+
+type GameArea = {
+    canvas: HTMLCanvasElement
+    context?: CanvasRenderingContext2D
+    start: any
+}
+
+var myGameArea: GameArea = {
+    canvas: document.createElement("canvas"),
+    start: function () {
+        this.canvas.width = 480
+        this.canvas.height = 270
+        this.context = this.canvas.getContext("2d")!
+        document.body.insertBefore(this.canvas, document.body.childNodes[0])
+    },
+}
+
+startGame()
