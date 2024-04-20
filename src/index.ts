@@ -3,16 +3,6 @@ const gameCanvas =
     document.createElement("canvas")
 const context = gameCanvas.getContext("2d")
 
-// if (context) {
-//     context?.beginPath()
-//     context?.rect(50, 50, 50, 50)
-//     context.fillStyle = "red"
-// context.strokeStyle = "yellow"
-//     context.fill()
-//     context.stroke()
-//     context.closePath()
-// }
-
 const drawPlayer = () => {
     if (context) {
         context?.beginPath()
@@ -26,7 +16,7 @@ const drawPlayer = () => {
 }
 
 const draw = () => {
-    context?.clearRect(0, 0, 1200, 720)
+    context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
     drawPlayer()
 }
 
