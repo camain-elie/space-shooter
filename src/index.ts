@@ -1,15 +1,27 @@
+const SHIP_WIDTH = 10
+const SHIP_LENGTH = 20
+
 const gameCanvas =
     (document.getElementById("gameCanvas") as HTMLCanvasElement) ||
     document.createElement("canvas")
 const context = gameCanvas.getContext("2d")
+const playerPos = {
+    x: 50,
+    y: 50,
+}
+gameCanvas.onmousemove = (ev) => {
+    console.log(ev)
+    playerPos.x = ev.clientX
+    playerPos.y = ev.clientY
+}
 
 const drawPlayer = () => {
     if (context) {
         context?.beginPath()
         context.strokeStyle = "white"
-        context?.moveTo(50, 100)
-        context?.lineTo(70, 105)
-        context?.lineTo(50, 110)
+        context?.moveTo(playerPos.x - SHIP_LENGTH, playerPos.y - 5)
+        context?.lineTo(playerPos.x, playerPos.y)
+        context?.lineTo(playerPos.x - SHIP_LENGTH, playerPos.y + 5)
         context?.closePath()
         context?.stroke()
     }
@@ -20,7 +32,7 @@ const draw = () => {
     drawPlayer()
 }
 
-setInterval(draw, 10)
+setInterval(draw, 20)
 
 // var myGamePiece: any
 
