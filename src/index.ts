@@ -1,29 +1,80 @@
+// Canvas constants
+const REFRESH_INTERVAL = 20
+const CANVAS_WIDTH = 1200
+const CANVAS_HEIGHT = 720
+// Ship constants
 const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
+const MAX_SHIP_SPEED = 20
+
+type Coordinates = { x: number; y: number }
 
 const gameCanvas =
     (document.getElementById("gameCanvas") as HTMLCanvasElement) ||
     document.createElement("canvas")
 const context = gameCanvas.getContext("2d")
-const playerPos = {
-    x: 50,
-    y: 50,
+const playerPosition: Coordinates = {
+    x: CANVAS_WIDTH / 2,
+    y: CANVAS_HEIGHT / 2,
 }
-gameCanvas.onmousemove = (ev) => {
-    console.log(ev)
-    playerPos.x = ev.clientX
-    playerPos.y = ev.clientY
+const cursorPosition: Coordinates = { x: 0, y: 0 }
+
+// PLAYER MOVEMENTS
+gameCanvas.onmousemove = (ev: MouseEvent) => {
+    cursorPosition.x = ev.clientX
+    cursorPosition.y = ev.clientY
+}
+
+const getDistance = (A: Coordinates, B: Coordinates) => {
+    const xDiff = A.x - B.x,
+        yDiff = A.y - B.y
+    return Math.hypot(xDiff, yDiff)
+}
+
+// TODO
+const getShipOrientationVector = () => {
+    const shipVector: Coordinates = { x: 10, y: 0 }
+    const cursorVector: Coordinates = {
+        x: cursorPosition.x - playerPosition.x,
+        y: -(cursorPosition.y - playerPosition.y),
+    }
+
+    const scalarProduct =
+        shipVector.x * cursorVector.x + shipVector.y * cursorVector.y
+    const shipVectorNorm = Math.sqrt(
+        Math.pow(shipVector.x, 2) + Math.pow(shipVector.y, 2)
+    )
+    const cursorVectorNorm = Math.sqrt(
+        Math.pow(cursorVector.x, 2) + Math.pow(cursorVector.y, 2)
+    )
+    const cos = scalarProduct / (shipVectorNorm * cursorVectorNorm)
+    const angle = Math.acos(cos)
+    const degAngle = angle * (180 / Math.PI)
+    // return cursorVector.y < 0 ? -degAngle : degAngle
+    return cursorVector.y < 0 ? -angle : angle
 }
 
 const drawPlayer = () => {
     if (context) {
+        const shipRotation = getShipOrientationVector()
+        context.translate(playerPosition.x, playerPosition.y)
+        context.rotate(-shipRotation)
+
         context?.beginPath()
         context.strokeStyle = "white"
-        context?.moveTo(playerPos.x - SHIP_LENGTH, playerPos.y - 5)
-        context?.lineTo(playerPos.x, playerPos.y)
-        context?.lineTo(playerPos.x - SHIP_LENGTH, playerPos.y + 5)
+        // context?.moveTo(playerPosition.x - SHIP_LENGTH, playerPosition.y - 5)
+        // context?.lineTo(playerPosition.x, playerPosition.y)
+        // context?.lineTo(playerPosition.x - SHIP_LENGTH, playerPosition.y + 5)
+        context?.moveTo(-SHIP_LENGTH, -5)
+        context?.lineTo(0, 0)
+        context?.lineTo(-SHIP_LENGTH, 5)
         context?.closePath()
         context?.stroke()
+
+        context.rotate(shipRotation)
+        context.translate(-playerPosition.x, -playerPosition.y)
+
+        console.log(getShipOrientationVector())
     }
 }
 
@@ -32,7 +83,7 @@ const draw = () => {
     drawPlayer()
 }
 
-setInterval(draw, 20)
+setInterval(draw, REFRESH_INTERVAL)
 
 // var myGamePiece: any
 
