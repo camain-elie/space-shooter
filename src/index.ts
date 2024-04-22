@@ -5,17 +5,38 @@ const CANVAS_HEIGHT = 720
 // Ship constants
 const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
-const MAX_SHIP_SPEED = 20
+const SHIP_MAX_SPEED = 5
+const SHIP_ACCELERATION = 5
+
+let second = 0
 
 type Coordinates = { x: number; y: number }
+type Ship = {
+    coordinates: Coordinates
+    directionVector: Coordinates
+    angle: number
+    speed: number
+    acceleration: number
+    distanceToCursor: number
+}
 
 const gameCanvas =
     (document.getElementById("gameCanvas") as HTMLCanvasElement) ||
     document.createElement("canvas")
 const context = gameCanvas.getContext("2d")
-const playerPosition: Coordinates = {
-    x: CANVAS_WIDTH / 2,
-    y: CANVAS_HEIGHT / 2,
+const player: Ship = {
+    coordinates: {
+        x: CANVAS_WIDTH / 2,
+        y: CANVAS_HEIGHT / 2,
+    },
+    directionVector: {
+        x: 0,
+        y: 0,
+    },
+    angle: 0,
+    speed: 0,
+    acceleration: 0,
+    distanceToCursor: 0,
 }
 const cursorPosition: Coordinates = { x: 0, y: 0 }
 
@@ -23,6 +44,7 @@ const cursorPosition: Coordinates = { x: 0, y: 0 }
 gameCanvas.onmousemove = (ev: MouseEvent) => {
     cursorPosition.x = ev.clientX
     cursorPosition.y = ev.clientY
+    console.log(ev.clientX, ev.clientY)
 }
 
 const getDistance = (A: Coordinates, B: Coordinates) => {
@@ -31,14 +53,52 @@ const getDistance = (A: Coordinates, B: Coordinates) => {
     return Math.hypot(xDiff, yDiff)
 }
 
-// TODO
+const getAcceleration = () => {
+    if (player.distanceToCursor <= 20 && player.speed) {
+        player.speed = 0
+    } else if (player.speed < SHIP_MAX_SPEED && player.distanceToCursor > 50) {
+        const newSpeed = player.speed + SHIP_ACCELERATION / REFRESH_INTERVAL
+        player.speed = newSpeed > SHIP_MAX_SPEED ? SHIP_MAX_SPEED : newSpeed
+    } else if (player.speed > 3 && player.distanceToCursor <= 50) {
+        const newSpeed = player.speed - SHIP_ACCELERATION / REFRESH_INTERVAL
+        player.speed = newSpeed < 0 ? 1 : newSpeed
+    }
+}
+
+const updateShipPosition = () => {
+    const distancePercentage =
+        (player.speed * 100) / player.distanceToCursor / REFRESH_INTERVAL
+    // console.log(!(second % 20))
+    const newVec = {
+        x: cursorPosition.x - player.coordinates.x,
+        y: cursorPosition.y - player.coordinates.y,
+    }
+    !(second % 40) &&
+        console.log(
+            distancePercentage,
+            player.directionVector.x,
+            player.directionVector.y,
+            cursorPosition.x,
+            cursorPosition.y,
+            player.coordinates.x,
+            player.coordinates.y
+        )
+    // player.coordinates.x += player.directionVector.x * distancePercentage
+    // player.coordinates.y += player.directionVector.y * distancePercentage
+    player.coordinates.x += newVec.x * distancePercentage
+    player.coordinates.y += newVec.y * distancePercentage
+    // console.log(player.coordinates)
+    second++
+}
+
+// UTILS
 const getShipOrientationVector = () => {
     const shipVector: Coordinates = { x: 10, y: 0 }
     const cursorVector: Coordinates = {
-        x: cursorPosition.x - playerPosition.x,
-        y: -(cursorPosition.y - playerPosition.y),
+        x: cursorPosition.x - player.coordinates.x,
+        y: -(cursorPosition.y - player.coordinates.y),
     }
-
+    player.directionVector = { ...cursorVector }
     const scalarProduct =
         shipVector.x * cursorVector.x + shipVector.y * cursorVector.y
     const shipVectorNorm = Math.sqrt(
@@ -49,22 +109,27 @@ const getShipOrientationVector = () => {
     )
     const cos = scalarProduct / (shipVectorNorm * cursorVectorNorm)
     const angle = Math.acos(cos)
-    const degAngle = angle * (180 / Math.PI)
-    // return cursorVector.y < 0 ? -degAngle : degAngle
     return cursorVector.y < 0 ? -angle : angle
 }
 
+// DRAW
 const drawPlayer = () => {
     if (context) {
+        player.distanceToCursor = getDistance(
+            cursorPosition,
+            player.coordinates
+        )
         const shipRotation = getShipOrientationVector()
-        context.translate(playerPosition.x, playerPosition.y)
+        if (player.distanceToCursor > 50) player.angle = shipRotation
+        getAcceleration()
+        updateShipPosition()
+
+        context.translate(player.coordinates.x, player.coordinates.y)
         context.rotate(-shipRotation)
 
         context?.beginPath()
         context.strokeStyle = "white"
-        // context?.moveTo(playerPosition.x - SHIP_LENGTH, playerPosition.y - 5)
-        // context?.lineTo(playerPosition.x, playerPosition.y)
-        // context?.lineTo(playerPosition.x - SHIP_LENGTH, playerPosition.y + 5)
+
         context?.moveTo(-SHIP_LENGTH, -5)
         context?.lineTo(0, 0)
         context?.lineTo(-SHIP_LENGTH, 5)
@@ -72,9 +137,7 @@ const drawPlayer = () => {
         context?.stroke()
 
         context.rotate(shipRotation)
-        context.translate(-playerPosition.x, -playerPosition.y)
-
-        console.log(getShipOrientationVector())
+        context.translate(-player.coordinates.x, -player.coordinates.y)
     }
 }
 
