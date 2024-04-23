@@ -5,8 +5,8 @@ const CANVAS_HEIGHT = 720
 // Ship constants
 const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
-const SHIP_MAX_SPEED = 5
-const SHIP_ACCELERATION = 5
+const SHIP_MAX_SPEED = 3
+const SHIP_ACCELERATION = 3
 
 let second = 0
 
@@ -30,15 +30,18 @@ const player: Ship = {
         y: CANVAS_HEIGHT / 2,
     },
     directionVector: {
-        x: 0,
-        y: 0,
+        x: CANVAS_WIDTH / 2,
+        y: CANVAS_HEIGHT / 2,
     },
     angle: 0,
     speed: 0,
     acceleration: 0,
     distanceToCursor: 0,
 }
-const cursorPosition: Coordinates = { x: 0, y: 0 }
+const cursorPosition: Coordinates = {
+    x: CANVAS_WIDTH / 2 + 1,
+    y: CANVAS_HEIGHT / 2,
+}
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
