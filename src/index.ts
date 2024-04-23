@@ -8,18 +8,22 @@ const SHIP_LENGTH = 20
 const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 
-let second = 0
+// TODO
+// Stop movement when mouse off canvas
+// Improve deceleration
+// Improve acceleration and top speed
 
 type Coordinates = { x: number; y: number }
+
 type Ship = {
     coordinates: Coordinates
     directionVector: Coordinates
     angle: number
     speed: number
-    acceleration: number
     distanceToCursor: number
 }
 
+// Game set up
 const gameCanvas =
     (document.getElementById("gameCanvas") as HTMLCanvasElement) ||
     document.createElement("canvas")
@@ -35,19 +39,17 @@ const player: Ship = {
     },
     angle: 0,
     speed: 0,
-    acceleration: 0,
     distanceToCursor: 0,
 }
 const cursorPosition: Coordinates = {
-    x: CANVAS_WIDTH / 2 + 1,
-    y: CANVAS_HEIGHT / 2,
+    ...player.coordinates,
 }
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
     cursorPosition.x = ev.clientX
     cursorPosition.y = ev.clientY
-    console.log(ev.clientX, ev.clientY)
+    console.log(ev.clientX, ev.clientY, ev)
 }
 
 const getDistance = (A: Coordinates, B: Coordinates) => {
@@ -69,32 +71,20 @@ const getAcceleration = () => {
 }
 
 const updateShipPosition = () => {
-    const distancePercentage =
-        (player.speed * 100) / player.distanceToCursor / REFRESH_INTERVAL
-    // console.log(!(second % 20))
-    const newVec = {
-        x: cursorPosition.x - player.coordinates.x,
-        y: cursorPosition.y - player.coordinates.y,
+    if (player.distanceToCursor) {
+        const distancePercentage =
+            (player.speed * 100) / player.distanceToCursor / REFRESH_INTERVAL
+
+        const newVec = {
+            x: cursorPosition.x - player.coordinates.x,
+            y: cursorPosition.y - player.coordinates.y,
+        }
+
+        player.coordinates.x += newVec.x * distancePercentage
+        player.coordinates.y += newVec.y * distancePercentage
     }
-    !(second % 40) &&
-        console.log(
-            distancePercentage,
-            player.directionVector.x,
-            player.directionVector.y,
-            cursorPosition.x,
-            cursorPosition.y,
-            player.coordinates.x,
-            player.coordinates.y
-        )
-    // player.coordinates.x += player.directionVector.x * distancePercentage
-    // player.coordinates.y += player.directionVector.y * distancePercentage
-    player.coordinates.x += newVec.x * distancePercentage
-    player.coordinates.y += newVec.y * distancePercentage
-    // console.log(player.coordinates)
-    second++
 }
 
-// UTILS
 const getShipOrientationVector = () => {
     const shipVector: Coordinates = { x: 10, y: 0 }
     const cursorVector: Coordinates = {
