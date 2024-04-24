@@ -1,5 +1,5 @@
 // Canvas constants
-const REFRESH_INTERVAL = 20
+const REFRESH_INTERVAL = 30
 const CANVAS_WIDTH = 1200
 const CANVAS_HEIGHT = 720
 // Ship constants
@@ -9,9 +9,9 @@ const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 // Laser constants
 const LASER_SHOOTING_RATE = 3
-const LASER_SHOT_RANGE = 40
-const LASER_SHOT_SPEED = 100
-const LASER_SHOT_LENGTH = 10
+const LASER_SHOT_RANGE = 300
+const LASER_SHOT_SPEED = 800
+const LASER_SHOT_LENGTH = 15
 
 let currentInterval = 0
 
@@ -172,14 +172,16 @@ const drawLasers = () => {
     // console.log(distancePerRender)
     const distancePerRender = LASER_SHOT_SPEED / REFRESH_INTERVAL
     const laserVectorRatio = ((distancePerRender / 100) * 20) / 100
+
+    console.log(laserVectorRatio)
     player.lasers.forEach((laser, index) => {
         // const newLaserVector: Coordinates = { laser.fire}
         const newLaserPos: Coordinates = {
             x: laser.position.x + laser.directionVector.x * laserVectorRatio,
             y: laser.position.y + laser.directionVector.y * laserVectorRatio,
         }
-        if (currentInterval % 10 === 0 && index === 0)
-            console.log(laser, newLaserPos, laserVectorRatio)
+        // if (currentInterval % 10 === 0 && index === 0)
+        //     console.log(laser, newLaserPos, laserVectorRatio)
         laser.position = { ...newLaserPos }
     })
 
@@ -205,9 +207,18 @@ const drawLasers = () => {
 
     // Draw lasers
     player.lasers.forEach((laser, index) => {
+        const laserVectorToLengthRatio = LASER_SHOT_RANGE / LASER_SHOT_LENGTH
+        // const laserPath: Coordinates = {
+        //     x: laser.position
+        // }
         context?.beginPath()
         context?.moveTo(laser.position.x, laser.position.y)
-        context?.lineTo(laser.position.x + 20, laser.position.y + 20)
+        context?.lineTo(
+            laser.position.x +
+                laser.directionVector.x / laserVectorToLengthRatio,
+            laser.position.y +
+                laser.directionVector.y / laserVectorToLengthRatio
+        )
         context?.closePath()
         context?.stroke()
     })
