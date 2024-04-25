@@ -23,7 +23,6 @@ let currentInterval = 0
 type Coordinates = { x: number; y: number }
 
 type Laser = {
-    angle: number
     position: Coordinates
     directionVector: Coordinates
     createdPosition: Coordinates
@@ -164,34 +163,31 @@ const drawPlayer = () => {
     }
 }
 
-const drawLasers = () => {
-    // Laser position calculation
-    // const totalLaserTime = LASER_SHOT_RANGE / LASER_SHOT_SPEED
-    // const distancePerRender =
-    //     LASER_SHOT_RANGE / (totalLaserTime * REFRESH_INTERVAL)
-    // console.log(distancePerRender)
+const handleLasers = () => {
+    calculateLasersPosition()
+    createNewLaser()
+    drawLasers()
+    deleteLasers()
+}
+
+const calculateLasersPosition = () => {
     const distancePerRender = LASER_SHOT_SPEED / REFRESH_INTERVAL
     const laserVectorRatio = ((distancePerRender / 100) * 20) / 100
 
-    console.log(laserVectorRatio)
-    player.lasers.forEach((laser, index) => {
-        // const newLaserVector: Coordinates = { laser.fire}
+    player.lasers.forEach((laser) => {
         const newLaserPos: Coordinates = {
             x: laser.position.x + laser.directionVector.x * laserVectorRatio,
             y: laser.position.y + laser.directionVector.y * laserVectorRatio,
         }
-        // if (currentInterval % 10 === 0 && index === 0)
-        //     console.log(laser, newLaserPos, laserVectorRatio)
         laser.position = { ...newLaserPos }
     })
+}
 
-    // Laser creation
+const createNewLaser = () => {
     const firingInterval = Math.floor(REFRESH_INTERVAL / LASER_SHOOTING_RATE)
     if (player.firing && currentInterval % firingInterval === 0) {
         const laserDirectionRatio = LASER_SHOT_RANGE / player.distanceToCursor
-        console.log("Pew", laserDirectionRatio, player.directionVector)
         player.lasers.push({
-            angle: 0,
             position: { ...player.coordinates },
             directionVector: {
                 x:
@@ -204,13 +200,11 @@ const drawLasers = () => {
             createdPosition: { ...player.coordinates },
         })
     }
+}
 
-    // Draw lasers
-    player.lasers.forEach((laser, index) => {
+const drawLasers = () => {
+    player.lasers.forEach((laser) => {
         const laserVectorToLengthRatio = LASER_SHOT_RANGE / LASER_SHOT_LENGTH
-        // const laserPath: Coordinates = {
-        //     x: laser.position
-        // }
         context?.beginPath()
         context?.moveTo(laser.position.x, laser.position.y)
         context?.lineTo(
@@ -222,8 +216,9 @@ const drawLasers = () => {
         context?.closePath()
         context?.stroke()
     })
+}
 
-    // Delete lasers
+const deleteLasers = () => {
     player.lasers.forEach((laser, index) => {
         if (
             getDistance(laser.createdPosition, laser.position) >
@@ -236,7 +231,7 @@ const drawLasers = () => {
 const draw = () => {
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
     drawPlayer()
-    drawLasers()
+    handleLasers()
     currentInterval++
 }
 
