@@ -8,10 +8,10 @@ const SHIP_LENGTH = 20
 const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 // Laser constants
-const LASER_SHOOTING_RATE = 3
-const LASER_SHOT_RANGE = 300
-const LASER_SHOT_SPEED = 800
-const LASER_SHOT_LENGTH = 15
+const LASER_SHOOTING_RATE = 5
+const LASER_SHOT_RANGE = 350
+const LASER_SHOT_SPEED = 1000
+const LASER_SHOT_LENGTH = 10
 
 let currentInterval = 0
 
