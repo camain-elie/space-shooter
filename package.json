@@ -1,0 +1,27 @@
+{
+    "name": "space-shooter",
+    "version": "1.0.0",
+    "description": "Space shooter / asteroids game in Vanilla Typescript",
+    "main": "src/index.ts",
+    "scripts": {
+        "dev": "tsc --watch",
+        "lint": "eslint",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/camain-elie/space-shooter.git"
+    },
+    "author": "CAMAIN Elie",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/camain-elie/space-shooter/issues"
+    },
+    "homepage": "https://github.com/camain-elie/space-shooter#readme",
+    "devDependencies": {
+        "@eslint/js": "^9.1.1",
+        "eslint": "^8.57.0",
+        "eslint-plugin-html": "^8.1.1",
+        "typescript-eslint": "^7.7.1"
+    }
+}
