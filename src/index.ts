@@ -8,8 +8,8 @@ const SHIP_LENGTH = 20
 const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 // Laser constants
-const LASER_SHOOTING_RATE = 5
-const LASER_SHOT_RANGE = 350
+const LASER_SHOOTING_RATE = 10
+const LASER_SHOT_RANGE = 600
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
 
@@ -19,16 +19,20 @@ let currentInterval = 0
 // Stop movement when mouse off canvas
 // Improve deceleration
 // Improve acceleration and top speed
+// Look into TS ESLint commented rules
 
-type Coordinates = { x: number; y: number }
+interface Coordinates {
+    x: number
+    y: number
+}
 
-type Laser = {
+interface Laser {
     position: Coordinates
     directionVector: Coordinates
     createdPosition: Coordinates
 }
 
-type Ship = {
+interface Ship {
     coordinates: Coordinates
     relativeDirectionVector: Coordinates
     directionVector: Coordinates
@@ -36,7 +40,7 @@ type Ship = {
     speed: number
     distanceToCursor: number
     firing: boolean
-    lasers: Array<Laser>
+    lasers: Laser[]
 }
 
 // Game set up
@@ -73,16 +77,18 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
     cursorPosition.y = ev.clientY
 }
 
-gameCanvas.onmousedown = (ev: MouseEvent) => {
+gameCanvas.onmousedown = () => {
+    const dsf = "dfshu"
     player.firing = true
 }
-gameCanvas.onmouseup = (ev: MouseEvent) => {
+
+gameCanvas.onmouseup = () => {
     player.firing = false
 }
 
-const getDistance = (A: Coordinates, B: Coordinates) => {
-    const xDiff = A.x - B.x,
-        yDiff = A.y - B.y
+const getDistance = (a: Coordinates, b: Coordinates) => {
+    const xDiff = a.x - b.x,
+        yDiff = a.y - b.y
     return Math.hypot(xDiff, yDiff)
 }
 
@@ -152,9 +158,9 @@ const drawPlayer = () => {
         context?.beginPath()
         context.strokeStyle = "white"
 
-        context?.moveTo(-SHIP_LENGTH, -5)
+        context?.moveTo(-SHIP_LENGTH, -SHIP_WIDTH / 2)
         context?.lineTo(0, 0)
-        context?.lineTo(-SHIP_LENGTH, 5)
+        context?.lineTo(-SHIP_LENGTH, SHIP_WIDTH / 2)
         context?.closePath()
         context?.stroke()
 
@@ -235,7 +241,7 @@ const draw = () => {
     currentInterval++
 }
 
-setInterval(draw, REFRESH_INTERVAL)
+window.setInterval(draw, REFRESH_INTERVAL)
 
 // var myGamePiece: any
 
