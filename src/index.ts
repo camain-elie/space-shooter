@@ -289,8 +289,10 @@ const moveAsteroids = () => {
             rotationSpeed,
             angle,
             speed,
+            size,
         } = asteroid
         const { x, y } = coordinates
+        const radius = size * ASTEROID_SIZE
         const distancePerFrame = speed / REFRESH_INTERVAL
         const vectorDistance = getDistance(
             { x: 0, y: 0 },
@@ -301,11 +303,12 @@ const moveAsteroids = () => {
             x: x + relativeDirectionVector.x * distanceRatio,
             y: y + relativeDirectionVector.y * distanceRatio,
         }
-
-        if (newPos.x > CANVAS_WIDTH) newPos.x -= CANVAS_WIDTH
-        if (newPos.x < 0) newPos.x += CANVAS_WIDTH
-        if (newPos.y > CANVAS_HEIGHT) newPos.y -= CANVAS_HEIGHT
-        if (newPos.y < 0) newPos.y += CANVAS_HEIGHT
+        if (newPos.x > CANVAS_WIDTH + radius)
+            newPos.x -= CANVAS_WIDTH + radius * 2
+        if (newPos.x < 0 - radius) newPos.x += CANVAS_WIDTH + radius * 2
+        if (newPos.y > CANVAS_HEIGHT + radius)
+            newPos.y -= CANVAS_HEIGHT + radius * 2
+        if (newPos.y < 0 - radius) newPos.y += CANVAS_HEIGHT + radius * 2
 
         asteroid.coordinates = newPos
 
