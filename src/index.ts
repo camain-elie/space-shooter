@@ -12,8 +12,11 @@ const LASER_SHOOTING_RATE = 10
 const LASER_SHOT_RANGE = 600
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
+// Asteroids constants
+const ASTEROID_MAX_SPEED = 20
 
 let currentInterval = 0
+let level = 1
 
 // TODO
 // Stop movement when mouse off canvas
@@ -43,11 +46,23 @@ interface Ship {
     lasers: Laser[]
 }
 
+type AsteroidSize = 1 | 2 | 3
+
+interface Asteroid {
+    coordinates: Coordinates
+    relativeDirectionVector: Coordinates
+    rotationSpeed: number
+    angle: number
+    speed: number
+    size: AsteroidSize
+}
+
 // Game set up
 const gameCanvas =
     (document.getElementById("gameCanvas") as HTMLCanvasElement) ||
     document.createElement("canvas")
 const context = gameCanvas.getContext("2d")
+
 const player: Ship = {
     coordinates: {
         x: CANVAS_WIDTH / 2,
@@ -67,9 +82,12 @@ const player: Ship = {
     firing: false,
     lasers: [],
 }
+
 const cursorPosition: Coordinates = {
     ...player.coordinates,
 }
+
+const asteroids: Asteroid[] = []
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
@@ -78,7 +96,6 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
 }
 
 gameCanvas.onmousedown = () => {
-    const dsf = "dfshu"
     player.firing = true
 }
 
@@ -234,9 +251,67 @@ const deleteLasers = () => {
     })
 }
 
+const initAsteroids = () => {
+    for (let i = 0; i < level; i++) {
+        console.log(i, level)
+        createAsteroid(
+            {
+                x: Math.random() * CANVAS_WIDTH,
+                y: Math.random() * CANVAS_HEIGHT,
+            },
+            3
+        )
+    }
+}
+
+const moveAsteroids = () => {
+    asteroids.forEach((asteroid) => {
+        const { rotationSpeed, angle } = asteroid
+        const newAngle = angle + rotationSpeed / REFRESH_INTERVAL
+        asteroid.angle = newAngle
+    })
+}
+
+const drawAsteroids = () => {
+    asteroids.forEach((asteroid) => {
+        const { size, angle } = asteroid
+        const { x, y } = asteroid.coordinates
+        context?.beginPath()
+        // add a notch to visualize the rotation
+        context?.arc(x, y, size * 20, angle, angle + (2 * Math.PI - 0.2))
+        context?.stroke()
+    })
+}
+
+const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
+    // this will only implement a simplified version of an asteroid for now
+    asteroids.push({
+        coordinates,
+        relativeDirectionVector: {
+            x: 0,
+            y: 0,
+        },
+        rotationSpeed: Math.random() * 4 - 2,
+        angle: 0,
+        speed: 0,
+        size,
+    })
+}
+
+const handleAsteroids = () => {
+    if (asteroids.length) {
+        moveAsteroids()
+        drawAsteroids()
+    } else {
+        level++
+        initAsteroids()
+    }
+}
+
 const draw = () => {
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
     drawPlayer()
+    handleAsteroids()
     handleLasers()
     currentInterval++
 }
