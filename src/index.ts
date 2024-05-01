@@ -14,6 +14,7 @@ const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
 // Asteroids constants
 const ASTEROID_MAX_SPEED = 100
+const ASTEROID_SIZE = 20
 
 let currentInterval = 0
 let level = 1
@@ -190,6 +191,7 @@ const drawPlayer = () => {
 const handleLasers = () => {
     calculateLasersPosition()
     createNewLaser()
+    calculateLasersColision()
     drawLasers()
     deleteLasers()
 }
@@ -204,6 +206,20 @@ const calculateLasersPosition = () => {
             y: laser.position.y + laser.directionVector.y * laserVectorRatio,
         }
         laser.position = { ...newLaserPos }
+    })
+}
+
+const calculateLasersColision = () => {
+    player.lasers.forEach((laser, laserIndex) => {
+        asteroids.forEach((asteroid, asteroidIndex) => {
+            if (
+                getDistance(laser.position, asteroid.coordinates) <
+                asteroid.size * ASTEROID_SIZE
+            ) {
+                player.lasers.splice(laserIndex, 1)
+                destroyAsteroid(asteroid, asteroidIndex)
+            }
+        })
     })
 }
 
@@ -304,7 +320,13 @@ const drawAsteroids = () => {
         const { x, y } = asteroid.coordinates
         context?.beginPath()
         // add a notch to visualize the rotation
-        context?.arc(x, y, size * 20, angle, angle + (2 * Math.PI - 0.2))
+        context?.arc(
+            x,
+            y,
+            size * ASTEROID_SIZE,
+            angle,
+            angle + (2 * Math.PI - 0.2)
+        )
         context?.stroke()
     })
 }
@@ -322,6 +344,18 @@ const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
         speed: Math.random() * ASTEROID_MAX_SPEED,
         size,
     })
+}
+
+const destroyAsteroid = (asteroid: Asteroid, index: number) => {
+    const { coordinates, size } = asteroid
+    if (asteroid.size === 1) {
+        asteroids.splice(index, 1)
+    } else {
+        for (let i = 0; i < 5 - asteroid.size; i++) {
+            createAsteroid(coordinates, (size - 1) as AsteroidSize)
+        }
+        asteroids.splice(index, 1)
+    }
 }
 
 const handleAsteroids = () => {
