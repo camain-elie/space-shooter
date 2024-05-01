@@ -13,7 +13,7 @@ const LASER_SHOT_RANGE = 600
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
 // Asteroids constants
-const ASTEROID_MAX_SPEED = 20
+const ASTEROID_MAX_SPEED = 100
 
 let currentInterval = 0
 let level = 1
@@ -23,6 +23,7 @@ let level = 1
 // Improve deceleration
 // Improve acceleration and top speed
 // Look into TS ESLint commented rules
+// Simplify the vector system with vx, vy
 
 interface Coordinates {
     x: number
@@ -266,7 +267,32 @@ const initAsteroids = () => {
 
 const moveAsteroids = () => {
     asteroids.forEach((asteroid) => {
-        const { rotationSpeed, angle } = asteroid
+        const {
+            coordinates,
+            relativeDirectionVector,
+            rotationSpeed,
+            angle,
+            speed,
+        } = asteroid
+        const { x, y } = coordinates
+        const distancePerFrame = speed / REFRESH_INTERVAL
+        const vectorDistance = getDistance(
+            { x: 0, y: 0 },
+            relativeDirectionVector
+        )
+        const distanceRatio = distancePerFrame / vectorDistance
+        const newPos = {
+            x: x + relativeDirectionVector.x * distanceRatio,
+            y: y + relativeDirectionVector.y * distanceRatio,
+        }
+
+        if (newPos.x > CANVAS_WIDTH) newPos.x -= CANVAS_WIDTH
+        if (newPos.x < 0) newPos.x += CANVAS_WIDTH
+        if (newPos.y > CANVAS_HEIGHT) newPos.y -= CANVAS_HEIGHT
+        if (newPos.y < 0) newPos.y += CANVAS_HEIGHT
+
+        asteroid.coordinates = newPos
+
         const newAngle = angle + rotationSpeed / REFRESH_INTERVAL
         asteroid.angle = newAngle
     })
@@ -288,12 +314,12 @@ const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
     asteroids.push({
         coordinates,
         relativeDirectionVector: {
-            x: 0,
-            y: 0,
+            x: Math.random() * (20 + 20) - 20,
+            y: Math.random() * (20 + 20) - 20,
         },
         rotationSpeed: Math.random() * 4 - 2,
         angle: 0,
-        speed: 0,
+        speed: Math.random() * ASTEROID_MAX_SPEED,
         size,
     })
 }
