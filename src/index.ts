@@ -7,6 +7,8 @@ const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
 const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
+const INVINCIBILITY_TIME = 3
+const NUMBER_OF_LIVES = 3
 // Laser constants
 const LASER_SHOOTING_RATE = 10
 const LASER_SHOT_RANGE = 600
@@ -25,6 +27,9 @@ let level = 1
 // Improve acceleration and top speed
 // Look into TS ESLint commented rules
 // Simplify the vector system with vx, vy
+// Look into SAT theorem for better collision detection
+// Look into https://stackoverflow.com/questions/17047378/finding-coordinates-after-canvas-rotation
+// to avoid rotation and having to find coordinates
 
 interface Coordinates {
     x: number
@@ -39,6 +44,9 @@ interface Laser {
 
 interface Ship {
     coordinates: Coordinates
+    rightWing: Coordinates
+    leftWing: Coordinates
+    basePoint: Coordinates
     relativeDirectionVector: Coordinates
     directionVector: Coordinates
     angle: number
@@ -46,6 +54,8 @@ interface Ship {
     distanceToCursor: number
     firing: boolean
     lasers: Laser[]
+    invincibilityTime: number
+    lives: number
 }
 
 type AsteroidSize = 1 | 2 | 3
@@ -70,6 +80,18 @@ const player: Ship = {
         x: CANVAS_WIDTH / 2,
         y: CANVAS_HEIGHT / 2,
     },
+    leftWing: {
+        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
+        y: CANVAS_HEIGHT / 2 - SHIP_WIDTH / 2,
+    },
+    rightWing: {
+        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
+        y: CANVAS_HEIGHT / 2 + SHIP_WIDTH / 2,
+    },
+    basePoint: {
+        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
+        y: CANVAS_HEIGHT / 2,
+    },
     relativeDirectionVector: {
         x: CANVAS_WIDTH / 2,
         y: CANVAS_HEIGHT / 2,
@@ -83,6 +105,8 @@ const player: Ship = {
     distanceToCursor: 0,
     firing: false,
     lasers: [],
+    invincibilityTime: 0,
+    lives: NUMBER_OF_LIVES,
 }
 
 const cursorPosition: Coordinates = {
@@ -105,11 +129,27 @@ gameCanvas.onmouseup = () => {
     player.firing = false
 }
 
+// UTILS
 const getDistance = (a: Coordinates, b: Coordinates) => {
     const xDiff = a.x - b.x,
         yDiff = a.y - b.y
     return Math.hypot(xDiff, yDiff)
 }
+
+const inverseVector = (vector: Coordinates) => {
+    return { x: -vector.x, y: -vector.y }
+}
+
+const changeVectorLength = (vector: Coordinates, length: number) => {
+    const vectorLength = getDistance({ x: 0, y: 0 }, vector)
+    const vectorLengthRatio = length / vectorLength
+    return { x: vector.x * vectorLengthRatio, y: vector.y * vectorLengthRatio }
+}
+
+const getPerpendicularVector = (vector: Coordinates) => ({
+    x: vector.y,
+    y: -vector.x,
+})
 
 const getAcceleration = () => {
     if (player.distanceToCursor <= 20 && player.speed) {
@@ -135,14 +175,49 @@ const updateShipPosition = () => {
 
         player.coordinates.x += newVec.x * distancePercentage
         player.coordinates.y += newVec.y * distancePercentage
+
+        updateWingsPosition()
     }
+}
+
+const updateWingsPosition = () => {
+    const { coordinates, relativeDirectionVector } = player
+    const { x, y } = coordinates
+
+    // first we find the base point
+    const baseToNoseVector = changeVectorLength(
+        relativeDirectionVector,
+        SHIP_LENGTH
+    )
+    const inverseBaseToNoseVector = inverseVector(baseToNoseVector)
+    const basePoint = {
+        x: x + inverseBaseToNoseVector.x,
+        y: y + inverseBaseToNoseVector.y,
+    }
+
+    // from the base point we find the wings positions
+    const perpendicularVector = changeVectorLength(
+        getPerpendicularVector(baseToNoseVector),
+        SHIP_WIDTH / 2
+    )
+    const inversePerpendicularVector = inverseVector(perpendicularVector)
+
+    player.leftWing = {
+        x: basePoint.x + perpendicularVector.x,
+        y: basePoint.y + perpendicularVector.y,
+    }
+    player.rightWing = {
+        x: basePoint.x + inversePerpendicularVector.x,
+        y: basePoint.y + inversePerpendicularVector.y,
+    }
+    player.basePoint = { ...basePoint }
 }
 
 const getShipOrientationVector = () => {
     const shipVector: Coordinates = { x: 10, y: 0 }
     const cursorVector: Coordinates = {
         x: cursorPosition.x - player.coordinates.x,
-        y: -(cursorPosition.y - player.coordinates.y),
+        y: cursorPosition.y - player.coordinates.y,
     }
     player.relativeDirectionVector = { ...cursorVector }
     player.directionVector = { ...cursorPosition }
@@ -156,7 +231,7 @@ const getShipOrientationVector = () => {
     )
     const cos = scalarProduct / (shipVectorNorm * cursorVectorNorm)
     const angle = Math.acos(cos)
-    return cursorVector.y < 0 ? -angle : angle
+    return cursorVector.y > 0 ? -angle : angle
 }
 
 // DRAW
@@ -269,8 +344,7 @@ const deleteLasers = () => {
 }
 
 const initAsteroids = () => {
-    for (let i = 0; i < level; i++) {
-        console.log(i, level)
+    for (let i = 0; i < level; i++)
         createAsteroid(
             {
                 x: Math.random() * CANVAS_WIDTH,
@@ -278,7 +352,6 @@ const initAsteroids = () => {
             },
             3
         )
-    }
 }
 
 const moveAsteroids = () => {
@@ -371,11 +444,38 @@ const handleAsteroids = () => {
     }
 }
 
+const detectPlayerCollision = () => {
+    const { coordinates } = player
+    if (player.invincibilityTime) player.invincibilityTime--
+    else {
+        asteroids.forEach((asteroid) => {
+            const { size, coordinates: asteroidPosition } = asteroid
+            if (
+                getDistance(coordinates, asteroidPosition) <
+                    size * ASTEROID_SIZE ||
+                getDistance(player.leftWing, asteroidPosition) <
+                    size * ASTEROID_SIZE ||
+                getDistance(player.rightWing, asteroidPosition) <
+                    size * ASTEROID_SIZE
+            ) {
+                console.log("aouch")
+                player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
+                player.lives--
+                if (player.lives > 0)
+                    console.log(`Only ${player.lives} life left !`)
+                else console.log("Uh uh... End of game bruh")
+            }
+        })
+    }
+}
+
 const draw = () => {
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
     drawPlayer()
     handleAsteroids()
     handleLasers()
+    detectPlayerCollision()
+
     currentInterval++
 }
 
