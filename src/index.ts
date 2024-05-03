@@ -236,6 +236,7 @@ const getShipOrientationVector = () => {
 
 // DRAW
 const drawPlayer = () => {
+    const { invincibilityTime } = player
     if (context) {
         player.distanceToCursor = getDistance(
             cursorPosition,
@@ -246,11 +247,15 @@ const drawPlayer = () => {
         getAcceleration()
         updateShipPosition()
 
+        if (invincibilityTime) {
+            context.strokeStyle = invincibilityTime
+                ? `rgba(255,255,255, ${(invincibilityTime % 6) / 10})`
+                : "white"
+        } else if (!player.lives) context.strokeStyle = "red"
         context.translate(player.coordinates.x, player.coordinates.y)
         context.rotate(-shipRotation)
 
         context?.beginPath()
-        context.strokeStyle = "white"
 
         context?.moveTo(-SHIP_LENGTH, -SHIP_WIDTH / 2)
         context?.lineTo(0, 0)
@@ -260,6 +265,7 @@ const drawPlayer = () => {
 
         context.rotate(shipRotation)
         context.translate(-player.coordinates.x, -player.coordinates.y)
+        if (player.lives) context.strokeStyle = "white"
     }
 }
 
@@ -446,6 +452,8 @@ const handleAsteroids = () => {
 
 const detectPlayerCollision = () => {
     const { coordinates } = player
+    if (!player.lives) return
+
     if (player.invincibilityTime) player.invincibilityTime--
     else {
         asteroids.forEach((asteroid) => {
@@ -459,11 +467,14 @@ const detectPlayerCollision = () => {
                     size * ASTEROID_SIZE
             ) {
                 console.log("aouch")
-                player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
                 player.lives--
-                if (player.lives > 0)
+                if (player.lives > 0) {
                     console.log(`Only ${player.lives} life left !`)
-                else console.log("Uh uh... End of game bruh")
+                    player.invincibilityTime =
+                        INVINCIBILITY_TIME * REFRESH_INTERVAL
+                } else {
+                    console.log("Uh uh... End of game bruh")
+                }
             }
         })
     }
