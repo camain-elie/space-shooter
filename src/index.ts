@@ -253,6 +253,21 @@ const drawUIElements = () => {
         context.fillRect(x + 6, y, 5, 1)
         context.fillRect(x, y + 6, 1, 5)
         context.fillRect(x - 10, y, 5, 1)
+
+        // draw number of lives
+        for (let i = 0; i < player.lives; i++)
+            drawShipSprite(CANVAS_WIDTH - 2 * (i + 1) * SHIP_WIDTH, 15)
+    }
+}
+
+const drawShipSprite = (x: number, y: number) => {
+    if (context) {
+        context.beginPath()
+        context.moveTo(x, y)
+        context.lineTo(x + SHIP_WIDTH / 2, y + SHIP_LENGTH)
+        context.lineTo(x - SHIP_WIDTH / 2, y + SHIP_LENGTH)
+        context.lineTo(x, y)
+        context.stroke()
     }
 }
 
