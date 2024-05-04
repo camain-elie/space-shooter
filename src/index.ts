@@ -235,6 +235,42 @@ const getShipOrientationVector = () => {
 }
 
 // DRAW
+const drawUIElements = () => {
+    if (context) {
+        const { x, y } = cursorPosition
+
+        // draw the level
+        context.fillStyle = "white"
+        context.font = "16px sans-serif"
+        context.fillText(`Level ${level}`, 20, 25)
+
+        // draw the number of remaining asteroids
+        context.fillText(`Remaining : ${asteroids.length}`, 20, 45)
+
+        // draw the cursor
+        context.fillRect(x, y, 1, 1)
+        context.fillRect(x, y - 10, 1, 5)
+        context.fillRect(x + 6, y, 5, 1)
+        context.fillRect(x, y + 6, 1, 5)
+        context.fillRect(x - 10, y, 5, 1)
+
+        // draw number of lives
+        for (let i = 0; i < player.lives; i++)
+            drawShipSprite(CANVAS_WIDTH - 2 * (i + 1) * SHIP_WIDTH, 15)
+    }
+}
+
+const drawShipSprite = (x: number, y: number) => {
+    if (context) {
+        context.beginPath()
+        context.moveTo(x, y)
+        context.lineTo(x + SHIP_WIDTH / 2, y + SHIP_LENGTH)
+        context.lineTo(x - SHIP_WIDTH / 2, y + SHIP_LENGTH)
+        context.lineTo(x, y)
+        context.stroke()
+    }
+}
+
 const drawPlayer = () => {
     const { invincibilityTime } = player
     if (context) {
@@ -445,7 +481,7 @@ const handleAsteroids = () => {
         moveAsteroids()
         drawAsteroids()
     } else {
-        level++
+        if (currentInterval) level++
         initAsteroids()
     }
 }
@@ -482,6 +518,7 @@ const detectPlayerCollision = () => {
 
 const draw = () => {
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
+    drawUIElements()
     drawPlayer()
     handleAsteroids()
     handleLasers()
