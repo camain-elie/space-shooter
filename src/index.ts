@@ -243,6 +243,13 @@ const drawUIElements = () => {
         context.fillStyle = "white"
         context.font = "16px sans-serif"
         context.fillText(`Level ${level}`, 20, 25)
+
+        // draw the cursor
+        context.fillRect(x, y, 1, 1)
+        context.fillRect(x, y - 12, 1, 7)
+        context.fillRect(x + 6, y, 7, 1)
+        context.fillRect(x, y + 6, 1, 7)
+        context.fillRect(x - 12, y, 7, 1)
     }
 }
 

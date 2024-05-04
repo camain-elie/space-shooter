@@ -8,6 +8,7 @@ canvas {
     background-color: #0a132d;
     margin: 0 auto;
     display: block;
+    cursor: none;
 }
 
 div {
