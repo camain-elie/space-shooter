@@ -244,12 +244,15 @@ const drawUIElements = () => {
         context.font = "16px sans-serif"
         context.fillText(`Level ${level}`, 20, 25)
 
+        // draw the number of remaining asteroids
+        context.fillText(`Remaining : ${asteroids.length}`, 20, 45)
+
         // draw the cursor
         context.fillRect(x, y, 1, 1)
-        context.fillRect(x, y - 12, 1, 7)
-        context.fillRect(x + 6, y, 7, 1)
-        context.fillRect(x, y + 6, 1, 7)
-        context.fillRect(x - 12, y, 7, 1)
+        context.fillRect(x, y - 10, 1, 5)
+        context.fillRect(x + 6, y, 5, 1)
+        context.fillRect(x, y + 6, 1, 5)
+        context.fillRect(x - 10, y, 5, 1)
     }
 }
 
