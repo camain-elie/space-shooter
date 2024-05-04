@@ -235,6 +235,17 @@ const getShipOrientationVector = () => {
 }
 
 // DRAW
+const drawUIElements = () => {
+    if (context) {
+        const { x, y } = cursorPosition
+
+        // draw the level
+        context.fillStyle = "white"
+        context.font = "16px sans-serif"
+        context.fillText(`Level ${level}`, 20, 25)
+    }
+}
+
 const drawPlayer = () => {
     const { invincibilityTime } = player
     if (context) {
@@ -445,7 +456,7 @@ const handleAsteroids = () => {
         moveAsteroids()
         drawAsteroids()
     } else {
-        level++
+        if (currentInterval) level++
         initAsteroids()
     }
 }
@@ -482,6 +493,7 @@ const detectPlayerCollision = () => {
 
 const draw = () => {
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
+    drawUIElements()
     drawPlayer()
     handleAsteroids()
     handleLasers()
