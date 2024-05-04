@@ -20,6 +20,7 @@ const ASTEROID_SIZE = 20
 
 let currentInterval = 0
 let level = 1
+let endGame = false
 
 // TODO
 // Stop movement when mouse off canvas
@@ -240,6 +241,7 @@ const drawUIElements = () => {
         const { x, y } = cursorPosition
 
         // draw the level
+        context.textAlign = "left"
         context.fillStyle = "white"
         context.font = "16px sans-serif"
         context.fillText(`Level ${level}`, 20, 25)
@@ -487,42 +489,52 @@ const handleAsteroids = () => {
 }
 
 const detectPlayerCollision = () => {
-    const { coordinates } = player
+    const { coordinates, invincibilityTime } = player
     if (!player.lives) return
 
-    if (player.invincibilityTime) player.invincibilityTime--
+    if (invincibilityTime) player.invincibilityTime--
     else {
         asteroids.forEach((asteroid) => {
             const { size, coordinates: asteroidPosition } = asteroid
             if (
-                getDistance(coordinates, asteroidPosition) <
+                !invincibilityTime &&
+                (getDistance(coordinates, asteroidPosition) <
                     size * ASTEROID_SIZE ||
-                getDistance(player.leftWing, asteroidPosition) <
-                    size * ASTEROID_SIZE ||
-                getDistance(player.rightWing, asteroidPosition) <
-                    size * ASTEROID_SIZE
+                    getDistance(player.leftWing, asteroidPosition) <
+                        size * ASTEROID_SIZE ||
+                    getDistance(player.rightWing, asteroidPosition) <
+                        size * ASTEROID_SIZE)
             ) {
-                console.log("aouch")
                 player.lives--
-                if (player.lives > 0) {
-                    console.log(`Only ${player.lives} life left !`)
+                if (player.lives > 0)
                     player.invincibilityTime =
                         INVINCIBILITY_TIME * REFRESH_INTERVAL
-                } else {
-                    console.log("Uh uh... End of game bruh")
-                }
+                else endGame = true
             }
         })
+    }
+}
+
+const drawMessage = (message: string) => {
+    if (context) {
+        context.textAlign = "center"
+        context.font = "22px sans-serif"
+        context.fillStyle = `rgba( 255, 255, 255, ${
+            (currentInterval % (4 * REFRESH_INTERVAL)) / (6 * REFRESH_INTERVAL)
+        })`
+        context.fillText(message, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2)
     }
 }
 
 const draw = () => {
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
     drawUIElements()
-    drawPlayer()
     handleAsteroids()
-    handleLasers()
-    detectPlayerCollision()
+    if (!endGame) {
+        drawPlayer()
+        handleLasers()
+        detectPlayerCollision()
+    } else drawMessage("Your ship has been destroyed... Try again !")
 
     currentInterval++
 }
