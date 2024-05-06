@@ -2,13 +2,15 @@
 const REFRESH_INTERVAL = 30
 const CANVAS_WIDTH = 1200
 const CANVAS_HEIGHT = 720
+// Game constants
+const NEW_GAME_DELAY = 2
+const NUMBER_OF_LIVES = 3
 // Ship constants
 const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
 const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 const INVINCIBILITY_TIME = 3
-const NUMBER_OF_LIVES = 3
 // Laser constants
 const LASER_SHOOTING_RATE = 10
 const LASER_SHOT_RANGE = 600
@@ -21,6 +23,7 @@ const ASTEROID_SIZE = 20
 let currentInterval = 0
 let level = 1
 let endGame = false
+let newGameDelay = 0
 
 // TODO
 // Stop movement when mouse off canvas
@@ -122,6 +125,10 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
     cursorPosition.y = ev.clientY
 }
 
+gameCanvas.onclick = () => {
+    if (endGame && !newGameDelay) restartGame()
+}
+
 gameCanvas.onmousedown = () => {
     player.firing = true
 }
@@ -151,6 +158,16 @@ const getPerpendicularVector = (vector: Coordinates) => ({
     x: vector.y,
     y: -vector.x,
 })
+
+const restartGame = () => {
+    endGame = false
+    level = 0
+    asteroids.length = 0
+
+    player.lasers.length = 0
+    player.lives = NUMBER_OF_LIVES
+    player.invincibilityTime = INVINCIBILITY_TIME
+}
 
 const getAcceleration = () => {
     if (player.distanceToCursor <= 20 && player.speed) {
@@ -509,20 +526,30 @@ const detectPlayerCollision = () => {
                 if (player.lives > 0)
                     player.invincibilityTime =
                         INVINCIBILITY_TIME * REFRESH_INTERVAL
-                else endGame = true
+                else {
+                    endGame = true
+                    newGameDelay = NEW_GAME_DELAY * REFRESH_INTERVAL
+                }
             }
         })
     }
 }
 
-const drawMessage = (message: string) => {
+const drawMessage = (
+    message: string,
+    flicker = false,
+    y: number = CANVAS_HEIGHT / 2
+) => {
     if (context) {
         context.textAlign = "center"
         context.font = "22px sans-serif"
-        context.fillStyle = `rgba( 255, 255, 255, ${
-            (currentInterval % (4 * REFRESH_INTERVAL)) / (6 * REFRESH_INTERVAL)
-        })`
-        context.fillText(message, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2)
+        context.fillStyle = flicker
+            ? `rgba( 255, 255, 255, ${
+                  (currentInterval % (4 * REFRESH_INTERVAL)) /
+                  (6 * REFRESH_INTERVAL)
+              })`
+            : "white"
+        context.fillText(message, CANVAS_WIDTH / 2, y)
     }
 }
 
@@ -534,8 +561,16 @@ const draw = () => {
         drawPlayer()
         handleLasers()
         detectPlayerCollision()
-    } else drawMessage("Your ship has been destroyed... Try again !")
-
+    } else {
+        drawMessage("Your ship has been destroyed... Try again !")
+        if (!newGameDelay) {
+            drawMessage(
+                "Click to start a new game",
+                true,
+                CANVAS_HEIGHT / 2 + 30
+            )
+        } else newGameDelay--
+    }
     currentInterval++
 }
 
