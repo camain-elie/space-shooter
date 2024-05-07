@@ -22,6 +22,7 @@ const ASTEROID_SIZE = 20
 
 let currentInterval = 0
 let level = 1
+let startGame = true
 let endGame = false
 let newGameDelay = 0
 
@@ -126,6 +127,7 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
 }
 
 gameCanvas.onclick = () => {
+    if (startGame) startGame = false
     if (endGame && !newGameDelay) restartGame()
 }
 
@@ -557,12 +559,16 @@ const draw = () => {
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
     drawUIElements()
     handleAsteroids()
-    if (!endGame) {
+    if (!endGame && !startGame) {
         drawPlayer()
         handleLasers()
         detectPlayerCollision()
     } else {
-        drawMessage("Your ship has been destroyed... Try again !")
+        drawMessage(
+            startGame
+                ? "Welcome pilot ! Ready to shoot some rocks ?"
+                : "Your ship has been destroyed... Try again !"
+        )
         if (!newGameDelay) {
             drawMessage(
                 "Click to start a new game",
