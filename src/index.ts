@@ -514,7 +514,7 @@ const detectPlayerCollision = () => {
         asteroids.forEach((asteroid) => {
             const { size, coordinates: asteroidPosition } = asteroid
             if (
-                !invincibilityTime &&
+                !player.invincibilityTime &&
                 (getDistance(coordinates, asteroidPosition) <
                     size * ASTEROID_SIZE ||
                     getDistance(player.leftWing, asteroidPosition) <
