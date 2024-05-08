@@ -508,6 +508,7 @@ const handleAsteroids = () => {
     } else {
         if (currentInterval) level++
         initAsteroids()
+        player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
     }
 }
 
