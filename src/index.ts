@@ -122,8 +122,9 @@ const asteroids: Asteroid[] = []
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
-    cursorPosition.x = ev.clientX
-    cursorPosition.y = ev.clientY
+    const rect = gameCanvas.getBoundingClientRect()
+    cursorPosition.x = ev.clientX - rect.left
+    cursorPosition.y = ev.clientY - rect.top
 }
 
 gameCanvas.onclick = () => {
