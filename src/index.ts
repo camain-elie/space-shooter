@@ -455,20 +455,23 @@ const moveAsteroids = () => {
 }
 
 const drawAsteroids = () => {
-    asteroids.forEach((asteroid) => {
-        const { size, angle } = asteroid
-        const { x, y } = asteroid.coordinates
-        context?.beginPath()
-        // add a notch to visualize the rotation
-        context?.arc(
-            x,
-            y,
-            size * ASTEROID_SIZE,
-            angle,
-            angle + (2 * Math.PI - 0.2)
-        )
-        context?.stroke()
-    })
+    if (context) {
+        asteroids.forEach((asteroid) => {
+            const { size, angle } = asteroid
+            const { x, y } = asteroid.coordinates
+            context.strokeStyle = "white"
+            context.beginPath()
+            // add a notch to visualize the rotation
+            context.arc(
+                x,
+                y,
+                size * ASTEROID_SIZE,
+                angle,
+                angle + (2 * Math.PI - 0.2)
+            )
+            context.stroke()
+        })
+    }
 }
 
 const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
