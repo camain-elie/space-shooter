@@ -3,15 +3,26 @@
     margin: 0;
 }
 
+body {
+    background: rgba(10, 19, 45, 1);
+    background: radial-gradient(
+        circle,
+        rgba(10, 19, 45, 1) 0%,
+        rgba(3, 9, 27, 1) 100%
+    );
+    display: flex;
+    justify-content: center;
+}
+
 canvas {
-    border: 1px solid #d3d3d3;
+    border: 0.5px rgba(255, 255, 255, 0.5) solid;
     background-color: #0a132d;
-    margin: 0 auto;
     display: block;
     cursor: none;
+    border-radius: 5px;
 }
 
 div {
-    text-align: center;
-    width: 480px;
+    height: 100vh;
+    align-content: center;
 }

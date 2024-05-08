@@ -122,8 +122,9 @@ const asteroids: Asteroid[] = []
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
-    cursorPosition.x = ev.clientX
-    cursorPosition.y = ev.clientY
+    const rect = gameCanvas.getBoundingClientRect()
+    cursorPosition.x = ev.clientX - rect.left
+    cursorPosition.y = ev.clientY - rect.top
 }
 
 gameCanvas.onclick = () => {
@@ -454,20 +455,23 @@ const moveAsteroids = () => {
 }
 
 const drawAsteroids = () => {
-    asteroids.forEach((asteroid) => {
-        const { size, angle } = asteroid
-        const { x, y } = asteroid.coordinates
-        context?.beginPath()
-        // add a notch to visualize the rotation
-        context?.arc(
-            x,
-            y,
-            size * ASTEROID_SIZE,
-            angle,
-            angle + (2 * Math.PI - 0.2)
-        )
-        context?.stroke()
-    })
+    if (context) {
+        asteroids.forEach((asteroid) => {
+            const { size, angle } = asteroid
+            const { x, y } = asteroid.coordinates
+            context.strokeStyle = "white"
+            context.beginPath()
+            // add a notch to visualize the rotation
+            context.arc(
+                x,
+                y,
+                size * ASTEROID_SIZE,
+                angle,
+                angle + (2 * Math.PI - 0.2)
+            )
+            context.stroke()
+        })
+    }
 }
 
 const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
