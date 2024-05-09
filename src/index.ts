@@ -24,6 +24,7 @@ let currentInterval = 0
 let level = 1
 let startGame = true
 let endGame = false
+let isPaused = false
 let newGameDelay = 0
 
 // TODO
@@ -138,6 +139,11 @@ gameCanvas.onmousedown = () => {
 
 gameCanvas.onmouseup = () => {
     player.firing = false
+}
+
+window.onkeydown = (event: KeyboardEvent) => {
+    if (event.key.toLocaleLowerCase() === "p" && !startGame && !endGame)
+        isPaused = !isPaused
 }
 
 // UTILS
@@ -561,28 +567,33 @@ const drawMessage = (
 }
 
 const draw = () => {
-    context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
-    drawUIElements()
-    handleAsteroids()
-    if (!endGame && !startGame) {
-        drawPlayer()
-        handleLasers()
-        detectPlayerCollision()
-    } else {
-        drawMessage(
-            startGame
-                ? "Welcome pilot ! Ready to shoot some rocks ?"
-                : "Your ship has been destroyed... Try again !"
-        )
-        if (!newGameDelay) {
+    if (!isPaused) {
+        context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
+        drawUIElements()
+        handleAsteroids()
+        if (!endGame && !startGame) {
+            drawPlayer()
+            handleLasers()
+            detectPlayerCollision()
+        } else {
             drawMessage(
-                "Click to start a new game",
-                true,
-                CANVAS_HEIGHT / 2 + 30
+                startGame
+                    ? "Welcome pilot ! Ready to shoot some rocks ?"
+                    : "Your ship has been destroyed... Try again !"
             )
-        } else newGameDelay--
+            if (!newGameDelay) {
+                drawMessage(
+                    "Click to start a new game",
+                    true,
+                    CANVAS_HEIGHT / 2 + 30
+                )
+            } else newGameDelay--
+        }
+        currentInterval++
+    } else {
+        drawMessage("Game paused")
+        drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
     }
-    currentInterval++
 }
 
 window.setInterval(draw, REFRESH_INTERVAL)
