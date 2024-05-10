@@ -19,6 +19,7 @@ const LASER_SHOT_LENGTH = 10
 // Asteroids constants
 const ASTEROID_MAX_SPEED = 100
 const ASTEROID_SIZE = 20
+const ASTEROID_JAGGEDNESS = 0.3
 
 let currentInterval = 0
 let level = 1
@@ -73,6 +74,8 @@ interface Asteroid {
     angle: number
     speed: number
     size: AsteroidSize
+    vertex: number
+    offset: number[]
 }
 
 // Game set up
@@ -463,26 +466,37 @@ const moveAsteroids = () => {
 const drawAsteroids = () => {
     if (context) {
         asteroids.forEach((asteroid) => {
-            const { size, angle } = asteroid
+            const { size, angle, vertex, offset } = asteroid
+            const radius = size * ASTEROID_SIZE
             const { x, y } = asteroid.coordinates
+
             context.strokeStyle = "white"
             context.beginPath()
-            // add a notch to visualize the rotation
-            context.arc(
-                x,
-                y,
-                size * ASTEROID_SIZE,
-                angle,
-                angle + (2 * Math.PI - 0.2)
+            context.moveTo(
+                x + radius * offset[0] * Math.cos(angle),
+                y + radius * offset[0] * Math.sin(angle)
             )
+
+            for (let i = 1; i < vertex; i++) {
+                context.lineTo(
+                    x +
+                        radius *
+                            offset[i] *
+                            Math.cos(angle + (i * Math.PI * 2) / vertex),
+                    y +
+                        radius *
+                            offset[i] *
+                            Math.sin(angle + (i * Math.PI * 2) / vertex)
+                )
+            }
+            context.closePath()
             context.stroke()
         })
     }
 }
 
 const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
-    // this will only implement a simplified version of an asteroid for now
-    asteroids.push({
+    const asteroid: Asteroid = {
         coordinates,
         relativeDirectionVector: {
             x: Math.random() * (20 + 20) - 20,
@@ -492,7 +506,17 @@ const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
         angle: 0,
         speed: Math.random() * ASTEROID_MAX_SPEED,
         size,
-    })
+        vertex: Math.random() * (12 - 6) + 6,
+        offset: [],
+    }
+
+    for (let i = 0; i < asteroid.vertex; i++) {
+        asteroid.offset.push(
+            Math.random() * ASTEROID_JAGGEDNESS * 2 + 1 - ASTEROID_JAGGEDNESS
+        )
+    }
+
+    asteroids.push(asteroid)
 }
 
 const destroyAsteroid = (asteroid: Asteroid, index: number) => {
