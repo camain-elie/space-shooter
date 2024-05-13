@@ -55,6 +55,7 @@ My own asteroid game.
 <!-- Example: -->
 
 To clone and run this application, you'll need [Git](https://git-scm.com) and [Node.js](https://nodejs.org/en/download/) (which comes with [npm](http://npmjs.com)) installed on your computer. From your command line:
+The entry point is on index.html, you will need to compile typescript code to javascript code for it to work properly.
 
 ```bash
 # Clone this repository
@@ -63,8 +64,8 @@ $ git clone https://github.com/camain-elie/space-shooter
 # Install dependencies
 $ npm install
 
-# Run the app
-$ npm start
+# Compile typescript on watch mode
+$ npm run dev
 ```
 
 ## Acknowledgements
