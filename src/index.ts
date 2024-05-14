@@ -20,6 +20,10 @@ const LASER_SHOT_LENGTH = 10
 const ASTEROID_MAX_SPEED = 100
 const ASTEROID_SIZE = 20
 const ASTEROID_JAGGEDNESS = 0.3
+const ASTEROID_PARTICULE_LENGTH = 2
+const ASTEROID_PARTICULE_MIN_SPEED = 50
+const ASTEROID_PARTICULE_MAX_SPEED = 200
+const ASTEROID_PARTICULE_MAX_RANGE = 100
 
 let currentInterval = 0
 let level = 1
@@ -43,10 +47,15 @@ interface Coordinates {
     y: number
 }
 
-interface Laser {
+interface Particule {
     position: Coordinates
     directionVector: Coordinates
     createdPosition: Coordinates
+}
+
+interface AsteroidParticule extends Particule {
+    range: number
+    speed: number
 }
 
 interface Ship {
@@ -60,7 +69,7 @@ interface Ship {
     speed: number
     distanceToCursor: number
     firing: boolean
-    lasers: Laser[]
+    lasers: Particule[]
     invincibilityTime: number
     lives: number
 }
@@ -123,6 +132,8 @@ const cursorPosition: Coordinates = {
 }
 
 const asteroids: Asteroid[] = []
+
+const asteroidParticules: AsteroidParticule[] = []
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
@@ -336,6 +347,38 @@ const drawPlayer = () => {
     }
 }
 
+const calculateParticulePosition = (
+    particule: AsteroidParticule
+): Coordinates => {
+    const distancePerRender = particule.speed / REFRESH_INTERVAL
+    const particuleVectorRatio =
+        distancePerRender /
+        getDistance({ x: 0, y: 0 }, particule.directionVector)
+    return {
+        x:
+            particule.position.x +
+            particule.directionVector.x * particuleVectorRatio,
+        y:
+            particule.position.y +
+            particule.directionVector.y * particuleVectorRatio,
+    }
+}
+
+const drawParticule = (particule: AsteroidParticule, length: number) => {
+    const particuleVectorToLengthRatio =
+        getDistance({ x: 0, y: 0 }, particule.directionVector) / length
+    context?.beginPath()
+    context?.moveTo(particule.position.x, particule.position.y)
+    context?.lineTo(
+        particule.position.x +
+            particule.directionVector.x / particuleVectorToLengthRatio,
+        particule.position.y +
+            particule.directionVector.y / particuleVectorToLengthRatio
+    )
+    context?.closePath()
+    context?.stroke()
+}
+
 const handleLasers = () => {
     calculateLasersPosition()
     createNewLaser()
@@ -345,15 +388,12 @@ const handleLasers = () => {
 }
 
 const calculateLasersPosition = () => {
-    const distancePerRender = LASER_SHOT_SPEED / REFRESH_INTERVAL
-    const laserVectorRatio = ((distancePerRender / 100) * 20) / 100
-
     player.lasers.forEach((laser) => {
-        const newLaserPos: Coordinates = {
-            x: laser.position.x + laser.directionVector.x * laserVectorRatio,
-            y: laser.position.y + laser.directionVector.y * laserVectorRatio,
-        }
-        laser.position = { ...newLaserPos }
+        laser.position = calculateParticulePosition({
+            ...laser,
+            range: LASER_SHOT_RANGE,
+            speed: LASER_SHOT_SPEED,
+        })
     })
 }
 
@@ -392,17 +432,10 @@ const createNewLaser = () => {
 
 const drawLasers = () => {
     player.lasers.forEach((laser) => {
-        const laserVectorToLengthRatio = LASER_SHOT_RANGE / LASER_SHOT_LENGTH
-        context?.beginPath()
-        context?.moveTo(laser.position.x, laser.position.y)
-        context?.lineTo(
-            laser.position.x +
-                laser.directionVector.x / laserVectorToLengthRatio,
-            laser.position.y +
-                laser.directionVector.y / laserVectorToLengthRatio
+        drawParticule(
+            { ...laser, range: LASER_SHOT_RANGE, speed: LASER_SHOT_SPEED },
+            LASER_SHOT_LENGTH
         )
-        context?.closePath()
-        context?.stroke()
     })
 }
 
@@ -521,6 +554,7 @@ const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
 
 const destroyAsteroid = (asteroid: Asteroid, index: number) => {
     const { coordinates, size } = asteroid
+    createParticules(coordinates)
     if (asteroid.size === 1) {
         asteroids.splice(index, 1)
     } else {
@@ -540,6 +574,55 @@ const handleAsteroids = () => {
         initAsteroids()
         player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
     }
+}
+
+const handleAsteroidParticules = () => {
+    calculateAsteroidParticulesPosition()
+    drawAsteroidParticules()
+    deleteAsteroidParticules()
+}
+
+const calculateAsteroidParticulesPosition = () => {
+    asteroidParticules.forEach((particule) => {
+        const newParticulePos: Coordinates =
+            calculateParticulePosition(particule)
+        particule.position = { ...newParticulePos }
+    })
+}
+
+const createParticules = (position: Coordinates) => {
+    for (let i = 0; i < 10; i++) {
+        asteroidParticules.push({
+            createdPosition: position,
+            directionVector: {
+                x: Math.random() * (10 + 10) - 10,
+                y: Math.random() * 20 - 10,
+            },
+            range: Math.random() * ASTEROID_PARTICULE_MAX_RANGE,
+            speed:
+                Math.random() *
+                    (ASTEROID_PARTICULE_MAX_SPEED -
+                        ASTEROID_PARTICULE_MIN_SPEED) +
+                ASTEROID_PARTICULE_MIN_SPEED,
+            position,
+        })
+    }
+}
+
+const drawAsteroidParticules = () => {
+    asteroidParticules.forEach((particule) => {
+        drawParticule(particule, ASTEROID_PARTICULE_LENGTH)
+    })
+}
+
+const deleteAsteroidParticules = () => {
+    asteroidParticules.forEach((particule, index) => {
+        if (
+            getDistance(particule.createdPosition, particule.position) >
+            particule.range
+        )
+            asteroidParticules.splice(index, 1)
+    })
 }
 
 const detectPlayerCollision = () => {
@@ -595,6 +678,7 @@ const draw = () => {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
         drawUIElements()
         handleAsteroids()
+        handleAsteroidParticules()
         if (!endGame && !startGame) {
             drawPlayer()
             handleLasers()
