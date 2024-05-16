@@ -5,6 +5,9 @@ const CANVAS_HEIGHT = 720
 // Game constants
 const NEW_GAME_DELAY = 2
 const NUMBER_OF_LIVES = 3
+const XP_BAR_LENGTH = 300
+const XP_BAR_HEIGHT = 10
+const NEXT_LEVEL_XP = 30
 // Ship constants
 const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
@@ -12,8 +15,8 @@ const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 const INVINCIBILITY_TIME = 3
 // Laser constants
-const LASER_SHOOTING_RATE = 10
-const LASER_SHOT_RANGE = 600
+const LASER_SHOOTING_RATE = 2
+const LASER_SHOT_RANGE = 500
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
 // Asteroids constants
@@ -26,7 +29,7 @@ const ASTEROID_PARTICULE_MAX_SPEED = 200
 const ASTEROID_PARTICULE_MAX_RANGE = 100
 
 let currentInterval = 0
-let level = 1
+let wave = 1
 let startGame = true
 let endGame = false
 let isPaused = false
@@ -69,9 +72,13 @@ interface Ship {
     speed: number
     distanceToCursor: number
     firing: boolean
+    laserRate: number
+    laserRange: number
     lasers: Particule[]
     invincibilityTime: number
     lives: number
+    level: number
+    xp: number
 }
 
 type AsteroidSize = 1 | 2 | 3
@@ -122,9 +129,13 @@ const player: Ship = {
     speed: 0,
     distanceToCursor: 0,
     firing: false,
+    laserRate: LASER_SHOOTING_RATE,
+    laserRange: LASER_SHOT_RANGE,
     lasers: [],
     invincibilityTime: 0,
     lives: NUMBER_OF_LIVES,
+    level: 1,
+    xp: 0,
 }
 
 const cursorPosition: Coordinates = {
@@ -184,7 +195,7 @@ const getPerpendicularVector = (vector: Coordinates) => ({
 
 const restartGame = () => {
     endGame = false
-    level = 0
+    wave = 0
     asteroids.length = 0
 
     player.lasers.length = 0
@@ -275,16 +286,30 @@ const getShipOrientationVector = () => {
     return cursorVector.y > 0 ? -angle : angle
 }
 
+const handleXp = (asteroid: Asteroid) => {
+    player.xp += 4 - asteroid.size
+    if (player.xp > player.level * NEXT_LEVEL_XP) {
+        player.xp = player.xp - player.level * NEXT_LEVEL_XP
+        player.level++
+        player.laserRange += 20
+        if (
+            player.laserRate < 29 &&
+            (player.laserRate < 10 || player.level % 3 === 0)
+        )
+            player.laserRate += 1
+    }
+}
+
 // DRAW
 const drawUIElements = () => {
     if (context) {
         const { x, y } = cursorPosition
 
-        // draw the level
+        // draw the wave
         context.textAlign = "left"
         context.fillStyle = "white"
         context.font = "16px sans-serif"
-        context.fillText(`Level ${level}`, 20, 25)
+        context.fillText(`Wave ${wave}`, 20, 25)
 
         // draw the number of remaining asteroids
         context.fillText(`Remaining : ${asteroids.length}`, 20, 45)
@@ -299,6 +324,28 @@ const drawUIElements = () => {
         // draw number of lives
         for (let i = 0; i < player.lives; i++)
             drawShipSprite(CANVAS_WIDTH - 2 * (i + 1) * SHIP_WIDTH, 15)
+
+        // draw xp bar
+        context.strokeRect(
+            CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
+            20,
+            XP_BAR_LENGTH,
+            XP_BAR_HEIGHT
+        )
+        const xpFillLength =
+            (player.xp * XP_BAR_LENGTH) / (player.level * NEXT_LEVEL_XP)
+        context.fillRect(
+            CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
+            20,
+            xpFillLength,
+            XP_BAR_HEIGHT
+        )
+        context.textAlign = "center"
+        context.fillText(
+            `level ${player.level}`,
+            CANVAS_WIDTH / 2,
+            40 + XP_BAR_HEIGHT
+        )
     }
 }
 
@@ -391,7 +438,7 @@ const calculateLasersPosition = () => {
     player.lasers.forEach((laser) => {
         laser.position = calculateParticulePosition({
             ...laser,
-            range: LASER_SHOT_RANGE,
+            range: player.laserRange,
             speed: LASER_SHOT_SPEED,
         })
     })
@@ -405,6 +452,7 @@ const calculateLasersColision = () => {
                 asteroid.size * ASTEROID_SIZE
             ) {
                 player.lasers.splice(laserIndex, 1)
+                handleXp(asteroid)
                 destroyAsteroid(asteroid, asteroidIndex)
             }
         })
@@ -412,9 +460,9 @@ const calculateLasersColision = () => {
 }
 
 const createNewLaser = () => {
-    const firingInterval = Math.floor(REFRESH_INTERVAL / LASER_SHOOTING_RATE)
+    const firingInterval = Math.floor(REFRESH_INTERVAL / player.laserRate)
     if (player.firing && currentInterval % firingInterval === 0) {
-        const laserDirectionRatio = LASER_SHOT_RANGE / player.distanceToCursor
+        const laserDirectionRatio = player.laserRange / player.distanceToCursor
         player.lasers.push({
             position: { ...player.coordinates },
             directionVector: {
@@ -433,7 +481,7 @@ const createNewLaser = () => {
 const drawLasers = () => {
     player.lasers.forEach((laser) => {
         drawParticule(
-            { ...laser, range: LASER_SHOT_RANGE, speed: LASER_SHOT_SPEED },
+            { ...laser, range: player.laserRange, speed: LASER_SHOT_SPEED },
             LASER_SHOT_LENGTH
         )
     })
@@ -443,14 +491,14 @@ const deleteLasers = () => {
     player.lasers.forEach((laser, index) => {
         if (
             getDistance(laser.createdPosition, laser.position) >
-            LASER_SHOT_RANGE
+            player.laserRange
         )
             player.lasers.splice(index, 1)
     })
 }
 
 const initAsteroids = () => {
-    for (let i = 0; i < level; i++)
+    for (let i = 0; i < wave; i++)
         createAsteroid(
             {
                 x: Math.random() * CANVAS_WIDTH,
@@ -555,6 +603,7 @@ const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
 const destroyAsteroid = (asteroid: Asteroid, index: number) => {
     const { coordinates, size } = asteroid
     createParticules(coordinates)
+
     if (asteroid.size === 1) {
         asteroids.splice(index, 1)
     } else {
@@ -570,7 +619,7 @@ const handleAsteroids = () => {
         moveAsteroids()
         drawAsteroids()
     } else {
-        if (currentInterval) level++
+        if (currentInterval) wave++
         initAsteroids()
         player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
     }
