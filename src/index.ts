@@ -34,6 +34,7 @@ let startGame = true
 let endGame = false
 let isPaused = false
 let newGameDelay = 0
+let laserTicking = 0
 
 // TODO
 // Stop movement when mouse off canvas
@@ -164,6 +165,7 @@ gameCanvas.onmousedown = () => {
 
 gameCanvas.onmouseup = () => {
     player.firing = false
+    laserTicking = 0
 }
 
 window.onkeydown = (event: KeyboardEvent) => {
@@ -461,7 +463,7 @@ const calculateLasersColision = () => {
 
 const createNewLaser = () => {
     const firingInterval = Math.floor(REFRESH_INTERVAL / player.laserRate)
-    if (player.firing && currentInterval % firingInterval === 0) {
+    if (player.firing && laserTicking % firingInterval === 0) {
         const laserDirectionRatio = player.laserRange / player.distanceToCursor
         player.lasers.push({
             position: { ...player.coordinates },
@@ -747,6 +749,7 @@ const draw = () => {
             } else newGameDelay--
         }
         currentInterval++
+        if (player.firing) laserTicking++
     } else {
         drawMessage("Game paused")
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
