@@ -22,6 +22,7 @@ const LASER_SHOT_LENGTH = 10
 // Asteroids constants
 const ASTEROID_MAX_SPEED = 100
 const ASTEROID_SIZE = 20
+const GIGA_ASTEROID_SIZE = 200
 const ASTEROID_JAGGEDNESS = 0.3
 const ASTEROID_PARTICULE_LENGTH = 2
 const ASTEROID_PARTICULE_MIN_SPEED = 50
@@ -34,6 +35,7 @@ let startGame = true
 let endGame = false
 let isPaused = false
 let newGameDelay = 0
+let laserTicking = 0
 
 // TODO
 // Stop movement when mouse off canvas
@@ -81,7 +83,7 @@ interface Ship {
     xp: number
 }
 
-type AsteroidSize = 1 | 2 | 3
+type AsteroidType = 1 | 2 | 3 | 4
 
 interface Asteroid {
     coordinates: Coordinates
@@ -89,9 +91,11 @@ interface Asteroid {
     rotationSpeed: number
     angle: number
     speed: number
-    size: AsteroidSize
+    size: number
+    type: AsteroidType
     vertex: number
     offset: number[]
+    health: number
 }
 
 // Game set up
@@ -164,6 +168,7 @@ gameCanvas.onmousedown = () => {
 
 gameCanvas.onmouseup = () => {
     player.firing = false
+    laserTicking = 0
 }
 
 window.onkeydown = (event: KeyboardEvent) => {
@@ -198,9 +203,21 @@ const restartGame = () => {
     wave = 0
     asteroids.length = 0
 
+    player.level = 1
+    player.xp = 0
     player.lasers.length = 0
     player.lives = NUMBER_OF_LIVES
     player.invincibilityTime = INVINCIBILITY_TIME
+    player.laserRange = LASER_SHOT_RANGE
+    player.laserRate = LASER_SHOOTING_RATE
+}
+
+const initWave = () => {
+    if (currentInterval) wave++
+
+    initAsteroids()
+    if (wave % 3 === 0) createGigaAsteroid()
+    player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
 }
 
 const getAcceleration = () => {
@@ -287,7 +304,8 @@ const getShipOrientationVector = () => {
 }
 
 const handleXp = (asteroid: Asteroid) => {
-    player.xp += 4 - asteroid.size
+    const { type } = asteroid
+    player.xp += type === 4 ? 50 : 4 - type
     if (player.xp > player.level * NEXT_LEVEL_XP) {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
@@ -449,11 +467,16 @@ const calculateLasersColision = () => {
         asteroids.forEach((asteroid, asteroidIndex) => {
             if (
                 getDistance(laser.position, asteroid.coordinates) <
-                asteroid.size * ASTEROID_SIZE
+                asteroid.size
             ) {
                 player.lasers.splice(laserIndex, 1)
-                handleXp(asteroid)
-                destroyAsteroid(asteroid, asteroidIndex)
+                if (asteroid.health > 1) {
+                    asteroid.health--
+                    createParticules(laser.position)
+                } else {
+                    handleXp(asteroid)
+                    destroyAsteroid(asteroid, asteroidIndex)
+                }
             }
         })
     })
@@ -461,7 +484,7 @@ const calculateLasersColision = () => {
 
 const createNewLaser = () => {
     const firingInterval = Math.floor(REFRESH_INTERVAL / player.laserRate)
-    if (player.firing && currentInterval % firingInterval === 0) {
+    if (player.firing && laserTicking % firingInterval === 0) {
         const laserDirectionRatio = player.laserRange / player.distanceToCursor
         player.lasers.push({
             position: { ...player.coordinates },
@@ -509,17 +532,17 @@ const initAsteroids = () => {
 }
 
 const moveAsteroids = () => {
-    asteroids.forEach((asteroid) => {
+    asteroids.forEach((asteroid, index) => {
         const {
             coordinates,
             relativeDirectionVector,
             rotationSpeed,
             angle,
             speed,
+            type,
             size,
         } = asteroid
         const { x, y } = coordinates
-        const radius = size * ASTEROID_SIZE
         const distancePerFrame = speed / REFRESH_INTERVAL
         const vectorDistance = getDistance(
             { x: 0, y: 0 },
@@ -530,12 +553,22 @@ const moveAsteroids = () => {
             x: x + relativeDirectionVector.x * distanceRatio,
             y: y + relativeDirectionVector.y * distanceRatio,
         }
-        if (newPos.x > CANVAS_WIDTH + radius)
-            newPos.x -= CANVAS_WIDTH + radius * 2
-        if (newPos.x < 0 - radius) newPos.x += CANVAS_WIDTH + radius * 2
-        if (newPos.y > CANVAS_HEIGHT + radius)
-            newPos.y -= CANVAS_HEIGHT + radius * 2
-        if (newPos.y < 0 - radius) newPos.y += CANVAS_HEIGHT + radius * 2
+        if (type === 4) {
+            if (
+                newPos.x > CANVAS_WIDTH + size ||
+                newPos.x < -size ||
+                newPos.y > CANVAS_HEIGHT + size ||
+                newPos.y < -size
+            )
+                asteroids.splice(index, 1)
+        } else {
+            if (newPos.x > CANVAS_WIDTH + size)
+                newPos.x -= CANVAS_WIDTH + size * 2
+            if (newPos.x < 0 - size) newPos.x += CANVAS_WIDTH + size * 2
+            if (newPos.y > CANVAS_HEIGHT + size)
+                newPos.y -= CANVAS_HEIGHT + size * 2
+            if (newPos.y < 0 - size) newPos.y += CANVAS_HEIGHT + size * 2
+        }
 
         asteroid.coordinates = newPos
 
@@ -548,24 +581,23 @@ const drawAsteroids = () => {
     if (context) {
         asteroids.forEach((asteroid) => {
             const { size, angle, vertex, offset } = asteroid
-            const radius = size * ASTEROID_SIZE
             const { x, y } = asteroid.coordinates
 
             context.strokeStyle = "white"
             context.beginPath()
             context.moveTo(
-                x + radius * offset[0] * Math.cos(angle),
-                y + radius * offset[0] * Math.sin(angle)
+                x + size * offset[0] * Math.cos(angle),
+                y + size * offset[0] * Math.sin(angle)
             )
 
             for (let i = 1; i < vertex; i++) {
                 context.lineTo(
                     x +
-                        radius *
+                        size *
                             offset[i] *
                             Math.cos(angle + (i * Math.PI * 2) / vertex),
                     y +
-                        radius *
+                        size *
                             offset[i] *
                             Math.sin(angle + (i * Math.PI * 2) / vertex)
                 )
@@ -576,7 +608,39 @@ const drawAsteroids = () => {
     }
 }
 
-const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
+const createGigaAsteroid = () => {
+    const top = Math.random() < 0.5
+    const left = Math.random() < 0.5
+    const size = GIGA_ASTEROID_SIZE
+
+    const asteroid: Asteroid = {
+        coordinates: {
+            x: left ? -size : CANVAS_WIDTH + size,
+            y: top ? -size : CANVAS_HEIGHT + size,
+        },
+        relativeDirectionVector: {
+            x: left ? CANVAS_WIDTH : -CANVAS_WIDTH,
+            y: top ? CANVAS_HEIGHT : -CANVAS_HEIGHT,
+        },
+        rotationSpeed: Math.random() > 0.5 ? -1 : 1,
+        angle: 0,
+        speed: 100,
+        size,
+        type: 4,
+        vertex: 20,
+        offset: [],
+        health: 50,
+    }
+
+    for (let i = 0; i < asteroid.vertex; i++) {
+        asteroid.offset.push(Math.random() * 0.1 * 2 + 1 - 0.1)
+    }
+
+    asteroids.push(asteroid)
+}
+
+const createAsteroid = (coordinates: Coordinates, type: AsteroidType) => {
+    const size = type * ASTEROID_SIZE
     const asteroid: Asteroid = {
         coordinates,
         relativeDirectionVector: {
@@ -587,8 +651,10 @@ const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
         angle: 0,
         speed: Math.random() * ASTEROID_MAX_SPEED,
         size,
+        type,
         vertex: Math.random() * (12 - 6) + 6,
         offset: [],
+        health: 1,
     }
 
     for (let i = 0; i < asteroid.vertex; i++) {
@@ -601,16 +667,18 @@ const createAsteroid = (coordinates: Coordinates, size: AsteroidSize) => {
 }
 
 const destroyAsteroid = (asteroid: Asteroid, index: number) => {
-    const { coordinates, size } = asteroid
+    const { coordinates, type } = asteroid
     createParticules(coordinates)
 
-    if (asteroid.size === 1) {
-        asteroids.splice(index, 1)
-    } else {
-        for (let i = 0; i < 5 - asteroid.size; i++) {
-            createAsteroid(coordinates, (size - 1) as AsteroidSize)
+    asteroids.splice(index, 1)
+    if (type === 4) {
+        for (let i = 0; i < 4; i++) {
+            createAsteroid(coordinates, (type - 1) as AsteroidType)
         }
-        asteroids.splice(index, 1)
+    } else if (type !== 1) {
+        for (let i = 0; i < 5 - asteroid.type; i++) {
+            createAsteroid(coordinates, (type - 1) as AsteroidType)
+        }
     }
 }
 
@@ -618,11 +686,7 @@ const handleAsteroids = () => {
     if (asteroids.length) {
         moveAsteroids()
         drawAsteroids()
-    } else {
-        if (currentInterval) wave++
-        initAsteroids()
-        player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
-    }
+    } else initWave()
 }
 
 const handleAsteroidParticules = () => {
@@ -684,12 +748,9 @@ const detectPlayerCollision = () => {
             const { size, coordinates: asteroidPosition } = asteroid
             if (
                 !player.invincibilityTime &&
-                (getDistance(coordinates, asteroidPosition) <
-                    size * ASTEROID_SIZE ||
-                    getDistance(player.leftWing, asteroidPosition) <
-                        size * ASTEROID_SIZE ||
-                    getDistance(player.rightWing, asteroidPosition) <
-                        size * ASTEROID_SIZE)
+                (getDistance(coordinates, asteroidPosition) < size ||
+                    getDistance(player.leftWing, asteroidPosition) < size ||
+                    getDistance(player.rightWing, asteroidPosition) < size)
             ) {
                 player.lives--
                 if (player.lives > 0)
@@ -746,7 +807,9 @@ const draw = () => {
                 )
             } else newGameDelay--
         }
+
         currentInterval++
+        if (player.firing) laserTicking++
     } else {
         drawMessage("Game paused")
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
