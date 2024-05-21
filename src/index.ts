@@ -203,6 +203,8 @@ const restartGame = () => {
     wave = 0
     asteroids.length = 0
 
+    player.level = 1
+    player.xp = 0
     player.lasers.length = 0
     player.lives = NUMBER_OF_LIVES
     player.invincibilityTime = INVINCIBILITY_TIME
