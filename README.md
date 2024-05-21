@@ -8,7 +8,7 @@
 
 <div align="center">
   <h3>
-    Don't want the hassle of installing the project ? Give it a shot <a href="https://camain-elie.github.io/brews-app/"> here</a> !
+    Don't want the hassle of installing the project ? Give it a shot <a href="https://camain-elie.github.io/space-shooter/"> here</a> !
   </h3>
 </div>
 
