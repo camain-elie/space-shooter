@@ -63,6 +63,11 @@ interface AsteroidParticule extends Particule {
     speed: number
 }
 
+interface ExplosionParticule extends AsteroidParticule {
+    opacity: number
+    size: number
+}
+
 interface Ship {
     coordinates: Coordinates
     rightWing: Coordinates
@@ -147,8 +152,8 @@ const cursorPosition: Coordinates = {
 }
 
 const asteroids: Asteroid[] = []
-
 const asteroidParticules: AsteroidParticule[] = []
+const explosionParticules: ExplosionParticule[] = []
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
@@ -692,7 +697,7 @@ const handleAsteroids = () => {
 const handleAsteroidParticules = () => {
     calculateAsteroidParticulesPosition()
     drawAsteroidParticules()
-    deleteAsteroidParticules()
+    deleteParticules(asteroidParticules)
 }
 
 const calculateAsteroidParticulesPosition = () => {
@@ -703,8 +708,8 @@ const calculateAsteroidParticulesPosition = () => {
     })
 }
 
-const createParticules = (position: Coordinates) => {
-    for (let i = 0; i < 10; i++) {
+const createParticules = (position: Coordinates, particuleNumber = 10) => {
+    for (let i = 0; i < particuleNumber; i++) {
         asteroidParticules.push({
             createdPosition: position,
             directionVector: {
@@ -728,14 +733,69 @@ const drawAsteroidParticules = () => {
     })
 }
 
-const deleteAsteroidParticules = () => {
-    asteroidParticules.forEach((particule, index) => {
+const deleteParticules = (particuleArray: AsteroidParticule[]) => {
+    particuleArray.forEach((particule, index) => {
         if (
             getDistance(particule.createdPosition, particule.position) >
             particule.range
         )
-            asteroidParticules.splice(index, 1)
+            particuleArray.splice(index, 1)
     })
+}
+
+const createExplosion = (position: Coordinates) => {
+    createParticules(position, 50)
+
+    for (let i = 0; i < 30; i++) {
+        explosionParticules.push({
+            createdPosition: position,
+            directionVector: {
+                x: Math.random() * (10 + 10) - 10,
+                y: Math.random() * 20 - 10,
+            },
+            range: Math.random() * ASTEROID_PARTICULE_MAX_RANGE,
+            speed:
+                Math.random() *
+                    (ASTEROID_PARTICULE_MAX_SPEED -
+                        ASTEROID_PARTICULE_MIN_SPEED) +
+                ASTEROID_PARTICULE_MIN_SPEED,
+            position,
+            opacity: Math.random() * 0.8,
+            size: Math.random() * 2 + 2,
+        })
+    }
+}
+
+const handleExplosions = () => {
+    moveExplosionParticules()
+    deleteParticules(explosionParticules)
+    drawExplosionParticules()
+}
+
+const moveExplosionParticules = () => {
+    explosionParticules.forEach((particule) => {
+        const newParticulePos: Coordinates =
+            calculateParticulePosition(particule)
+        particule.position = { ...newParticulePos }
+    })
+    if (explosionParticules.length) console.log(explosionParticules[0])
+}
+
+const drawExplosionParticules = () => {
+    if (context) {
+        explosionParticules.forEach((particule) => {
+            const {
+                position: { x, y },
+                opacity,
+                size,
+            } = particule
+            context.fillStyle = `rgba(255, 255, 255, ${opacity})`
+            context.beginPath()
+            context.arc(x, y, size, 0, 2 * Math.PI)
+            context.fill()
+            context.closePath()
+        })
+    }
 }
 
 const detectPlayerCollision = () => {
@@ -757,6 +817,7 @@ const detectPlayerCollision = () => {
                     player.invincibilityTime =
                         INVINCIBILITY_TIME * REFRESH_INTERVAL
                 else {
+                    createExplosion(player.coordinates)
                     endGame = true
                     newGameDelay = NEW_GAME_DELAY * REFRESH_INTERVAL
                 }
@@ -789,6 +850,7 @@ const draw = () => {
         drawUIElements()
         handleAsteroids()
         handleAsteroidParticules()
+        handleExplosions()
         if (!endGame && !startGame) {
             drawPlayer()
             handleLasers()
