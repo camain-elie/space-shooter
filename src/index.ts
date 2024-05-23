@@ -63,6 +63,11 @@ interface AsteroidParticule extends Particule {
     speed: number
 }
 
+interface ExplosionParticule extends AsteroidParticule {
+    opacity: number
+    size: number
+}
+
 interface Ship {
     coordinates: Coordinates
     rightWing: Coordinates
@@ -147,8 +152,9 @@ const cursorPosition: Coordinates = {
 }
 
 const asteroids: Asteroid[] = []
-
 const asteroidParticules: AsteroidParticule[] = []
+const backgroundParticules: ExplosionParticule[] = []
+const explosionParticules: ExplosionParticule[] = []
 
 // PLAYER MOVEMENTS
 gameCanvas.onmousemove = (ev: MouseEvent) => {
@@ -604,6 +610,9 @@ const drawAsteroids = () => {
             }
             context.closePath()
             context.stroke()
+            // give a 3d perspective aspect to asteroids
+            context.fillStyle = "#0a132d"
+            context.fill()
         })
     }
 }
@@ -692,7 +701,7 @@ const handleAsteroids = () => {
 const handleAsteroidParticules = () => {
     calculateAsteroidParticulesPosition()
     drawAsteroidParticules()
-    deleteAsteroidParticules()
+    deleteParticules(asteroidParticules)
 }
 
 const calculateAsteroidParticulesPosition = () => {
@@ -703,8 +712,8 @@ const calculateAsteroidParticulesPosition = () => {
     })
 }
 
-const createParticules = (position: Coordinates) => {
-    for (let i = 0; i < 10; i++) {
+const createParticules = (position: Coordinates, particuleNumber = 10) => {
+    for (let i = 0; i < particuleNumber; i++) {
         asteroidParticules.push({
             createdPosition: position,
             directionVector: {
@@ -728,14 +737,139 @@ const drawAsteroidParticules = () => {
     })
 }
 
-const deleteAsteroidParticules = () => {
-    asteroidParticules.forEach((particule, index) => {
+const deleteParticules = (particuleArray: AsteroidParticule[]) => {
+    particuleArray.forEach((particule, index) => {
         if (
             getDistance(particule.createdPosition, particule.position) >
             particule.range
         )
-            asteroidParticules.splice(index, 1)
+            particuleArray.splice(index, 1)
     })
+}
+
+const createExplosion = (position: Coordinates) => {
+    createParticules(position, 50)
+
+    for (let i = 0; i < 30; i++) {
+        explosionParticules.push({
+            createdPosition: position,
+            directionVector: {
+                x: Math.random() * (10 + 10) - 10,
+                y: Math.random() * 20 - 10,
+            },
+            range: Math.random() * ASTEROID_PARTICULE_MAX_RANGE,
+            speed:
+                Math.random() *
+                    (ASTEROID_PARTICULE_MAX_SPEED -
+                        ASTEROID_PARTICULE_MIN_SPEED) +
+                ASTEROID_PARTICULE_MIN_SPEED,
+            position,
+            opacity: Math.random() * 0.8,
+            size: Math.random() * 2 + 2,
+        })
+    }
+}
+
+const handleExplosions = () => {
+    moveExplosionParticules()
+    deleteParticules(explosionParticules)
+    drawExplosionParticules()
+}
+
+const moveExplosionParticules = () => {
+    explosionParticules.forEach((particule) => {
+        const newParticulePos: Coordinates =
+            calculateParticulePosition(particule)
+        particule.position = { ...newParticulePos }
+    })
+    if (explosionParticules.length) console.log(explosionParticules[0])
+}
+
+const drawExplosionParticules = () => {
+    if (context) {
+        explosionParticules.forEach((particule) => {
+            const {
+                position: { x, y },
+                opacity,
+                size,
+            } = particule
+            context.fillStyle = `rgba(255, 255, 255, ${opacity})`
+            context.beginPath()
+            context.arc(x, y, size, 0, 2 * Math.PI)
+            context.fill()
+            context.closePath()
+        })
+    }
+}
+
+const handleBackground = () => {
+    moveBackgroundParticules()
+    drawBackgroundParticules()
+}
+
+const moveBackgroundParticules = () => {
+    backgroundParticules.forEach((particule) => {
+        const {
+            position: { x, y },
+            speed,
+            size,
+        } = particule
+        const { relativeDirectionVector: directionVector, speed: playerSpeed } =
+            player
+
+        const distancePerFrame = (speed * playerSpeed) / REFRESH_INTERVAL
+        const vectorDistance = getDistance({ x: 0, y: 0 }, directionVector)
+        const distanceRatio = distancePerFrame / vectorDistance
+        const newPos = {
+            x: x + directionVector.x * distanceRatio,
+            y: y + directionVector.y * distanceRatio,
+        }
+
+        if (newPos.x > CANVAS_WIDTH + size) newPos.x -= CANVAS_WIDTH + size * 2
+        if (newPos.x < 0 - size) newPos.x += CANVAS_WIDTH + size * 2
+        if (newPos.y > CANVAS_HEIGHT + size)
+            newPos.y -= CANVAS_HEIGHT + size * 2
+        if (newPos.y < 0 - size) newPos.y += CANVAS_HEIGHT + size * 2
+
+        particule.position = newPos
+    })
+}
+
+const drawBackgroundParticules = () => {
+    if (context) {
+        backgroundParticules.forEach((particule) => {
+            const {
+                position: { x, y },
+                opacity,
+                size,
+            } = particule
+            context.fillStyle = `rgba(255, 255, 255, ${opacity})`
+            context.beginPath()
+            context.arc(x, y, size, 0, 2 * Math.PI)
+            context.fill()
+            context.closePath()
+        })
+    }
+}
+
+const createBackground = () => {
+    for (let i = 0; i < 100; i++) {
+        const position = {
+            x: Math.random() * CANVAS_WIDTH,
+            y: Math.random() * CANVAS_HEIGHT,
+        }
+        const backgroundLevel = Math.random()
+        const particule: ExplosionParticule = {
+            createdPosition: { ...position },
+            position: { ...position },
+            directionVector: { x: 0, y: 0 },
+            range: 0,
+            speed: backgroundLevel * 8 + 1,
+            opacity: backgroundLevel,
+            size: backgroundLevel * 1 + 0.5,
+        }
+        backgroundParticules.push(particule)
+    }
 }
 
 const detectPlayerCollision = () => {
@@ -757,6 +891,7 @@ const detectPlayerCollision = () => {
                     player.invincibilityTime =
                         INVINCIBILITY_TIME * REFRESH_INTERVAL
                 else {
+                    createExplosion(player.coordinates)
                     endGame = true
                     newGameDelay = NEW_GAME_DELAY * REFRESH_INTERVAL
                 }
@@ -786,9 +921,11 @@ const drawMessage = (
 const draw = () => {
     if (!isPaused) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
-        drawUIElements()
+        handleBackground()
         handleAsteroids()
         handleAsteroidParticules()
+        handleExplosions()
+        drawUIElements()
         if (!endGame && !startGame) {
             drawPlayer()
             handleLasers()
@@ -815,5 +952,7 @@ const draw = () => {
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
     }
 }
+
+createBackground()
 
 window.setInterval(draw, REFRESH_INTERVAL)
