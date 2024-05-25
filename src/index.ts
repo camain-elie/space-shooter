@@ -1,3 +1,13 @@
+import { Ship } from "./Ship"
+import { Coordinates } from "./Vector"
+import * from "./Particules"
+
+import {
+    INVINCIBILITY_TIME,
+    LASER_SHOOTING_RATE,
+    LASER_RANGE,
+} from "./constants"
+
 // Canvas constants
 const REFRESH_INTERVAL = 30
 const CANVAS_WIDTH = 1200
@@ -13,10 +23,7 @@ const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
 const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
-const INVINCIBILITY_TIME = 3
 // Laser constants
-const LASER_SHOOTING_RATE = 2
-const LASER_SHOT_RANGE = 500
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
 // Asteroids constants
@@ -34,6 +41,7 @@ let wave = 1
 let startGame = true
 let endGame = false
 let isPaused = false
+let upgradeMenu = false
 let newGameDelay = 0
 let laserTicking = 0
 
@@ -46,47 +54,6 @@ let laserTicking = 0
 // Look into SAT theorem for better collision detection
 // Look into https://stackoverflow.com/questions/17047378/finding-coordinates-after-canvas-rotation
 // to avoid rotation and having to find coordinates
-
-interface Coordinates {
-    x: number
-    y: number
-}
-
-interface Particule {
-    position: Coordinates
-    directionVector: Coordinates
-    createdPosition: Coordinates
-}
-
-interface AsteroidParticule extends Particule {
-    range: number
-    speed: number
-}
-
-interface ExplosionParticule extends AsteroidParticule {
-    opacity: number
-    size: number
-}
-
-interface Ship {
-    coordinates: Coordinates
-    rightWing: Coordinates
-    leftWing: Coordinates
-    basePoint: Coordinates
-    relativeDirectionVector: Coordinates
-    directionVector: Coordinates
-    angle: number
-    speed: number
-    distanceToCursor: number
-    firing: boolean
-    laserRate: number
-    laserRange: number
-    lasers: Particule[]
-    invincibilityTime: number
-    lives: number
-    level: number
-    xp: number
-}
 
 type AsteroidType = 1 | 2 | 3 | 4
 
@@ -139,7 +106,7 @@ const player: Ship = {
     distanceToCursor: 0,
     firing: false,
     laserRate: LASER_SHOOTING_RATE,
-    laserRange: LASER_SHOT_RANGE,
+    laserRange: LASER_RANGE,
     lasers: [],
     invincibilityTime: 0,
     lives: NUMBER_OF_LIVES,
@@ -214,7 +181,7 @@ const restartGame = () => {
     player.lasers.length = 0
     player.lives = NUMBER_OF_LIVES
     player.invincibilityTime = INVINCIBILITY_TIME
-    player.laserRange = LASER_SHOT_RANGE
+    player.laserRange = LASER_RANGE
     player.laserRate = LASER_SHOOTING_RATE
 }
 
@@ -315,6 +282,7 @@ const handleXp = (asteroid: Asteroid) => {
     if (player.xp > player.level * NEXT_LEVEL_XP) {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
+        upgradeMenu = true
         player.laserRange += 20
         if (
             player.laserRate < 29 &&
@@ -918,8 +886,27 @@ const drawMessage = (
     }
 }
 
+const renderUpgradeMenu = () => {
+    drawMessage("Choose an upgrade", false, 150)
+    if (context) {
+        context.rect(CANVAS_WIDTH / 2 - 150, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.rect(CANVAS_WIDTH / 2 - 500, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.rect(CANVAS_WIDTH / 2 + 200, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.stroke()
+        context.rect(CANVAS_WIDTH / 2 - 150, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.rect(CANVAS_WIDTH / 2 - 500, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.rect(CANVAS_WIDTH / 2 + 200, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.fillStyle = "#0a132d"
+        context.fill()
+        // context.rect(CANVAS_WIDTH / 2 - 100, CANVAS_HEIGHT / 2 - 100, 200, 200)
+        // context.rect(CANVAS_WIDTH / 2 - 350, CANVAS_HEIGHT / 2 - 100, 200, 200)
+        // context.rect(CANVAS_WIDTH / 2 + 150, CANVAS_HEIGHT / 2 - 100, 200, 200)
+        // context.stroke()
+    }
+}
+
 const draw = () => {
-    if (!isPaused) {
+    if (!isPaused && !upgradeMenu) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
         handleBackground()
         handleAsteroids()
@@ -947,9 +934,11 @@ const draw = () => {
 
         currentInterval++
         if (player.firing) laserTicking++
-    } else {
+    } else if (isPaused) {
         drawMessage("Game paused")
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
+    } else {
+        renderUpgradeMenu()
     }
 }
 
