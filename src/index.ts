@@ -1,14 +1,20 @@
 import { Ship } from "./Ship"
 import { Coordinates } from "./Vector"
 import { AsteroidParticule, ExplosionParticule } from "./Particules"
-import { initUpgrades } from "./Upgrade"
+import { initUpgrades, handleUpgradeClick } from "./Upgrade"
 
-import { INVINCIBILITY_TIME, LASER_SHOOTING_RATE, LASER_RANGE } from "./Game"
+import {
+    INVINCIBILITY_TIME,
+    LASER_SHOOTING_RATE,
+    LASER_RANGE,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    MENU_UPGRADE_WIDTH,
+    MENU_UPGRADE_MARGIN,
+} from "./Game"
 
 // Canvas constants
 const REFRESH_INTERVAL = 30
-const CANVAS_WIDTH = 1200
-const CANVAS_HEIGHT = 720
 // Game constants
 const NEW_GAME_DELAY = 2
 const NUMBER_OF_LIVES = 3
@@ -281,6 +287,9 @@ const handleXp = (asteroid: Asteroid) => {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
         upgradeMenu = true
+        // const f = (a: MouseEvent, b: number) => console.log(a, b)
+        gameCanvas.onclick = (event: MouseEvent) =>
+            handleUpgradeClick(event, cursorPosition)
         player.laserRange += 20
         if (
             player.laserRate < 29 &&
@@ -748,7 +757,6 @@ const moveExplosionParticules = () => {
             calculateParticulePosition(particule)
         particule.position = { ...newParticulePos }
     })
-    if (explosionParticules.length) console.log(explosionParticules[0])
 }
 
 const drawExplosionParticules = () => {
@@ -885,15 +893,57 @@ const drawMessage = (
 }
 
 const renderUpgradeMenu = () => {
+    // render the background element without moving them
+    context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
+    drawAsteroidParticules()
+    drawAsteroids()
+    drawBackgroundParticules()
+    drawExplosionParticules()
+    drawLasers()
+    drawPlayer()
+    drawUIElements()
+
     drawMessage("Choose an upgrade", false, 150)
+    const length = MENU_UPGRADE_WIDTH
+    const margin = MENU_UPGRADE_MARGIN
     if (context) {
-        context.rect(CANVAS_WIDTH / 2 - 150, CANVAS_HEIGHT / 2 - 150, 300, 300)
-        context.rect(CANVAS_WIDTH / 2 - 500, CANVAS_HEIGHT / 2 - 150, 300, 300)
-        context.rect(CANVAS_WIDTH / 2 + 200, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.rect(
+            CANVAS_WIDTH / 2 - length / 2,
+            CANVAS_HEIGHT / 2 - length / 2,
+            length,
+            length
+        )
+        context.rect(
+            CANVAS_WIDTH / 2 - (length + length / 2 + margin),
+            CANVAS_HEIGHT / 2 - length / 2,
+            length,
+            length
+        )
+        context.rect(
+            CANVAS_WIDTH / 2 + length / 2 + margin,
+            CANVAS_HEIGHT / 2 - length / 2,
+            length,
+            length
+        )
         context.stroke()
-        context.rect(CANVAS_WIDTH / 2 - 150, CANVAS_HEIGHT / 2 - 150, 300, 300)
-        context.rect(CANVAS_WIDTH / 2 - 500, CANVAS_HEIGHT / 2 - 150, 300, 300)
-        context.rect(CANVAS_WIDTH / 2 + 200, CANVAS_HEIGHT / 2 - 150, 300, 300)
+        context.rect(
+            CANVAS_WIDTH / 2 - length / 2,
+            CANVAS_HEIGHT / 2 - length / 2,
+            length,
+            length
+        )
+        context.rect(
+            CANVAS_WIDTH / 2 - (length + length / 2 + margin),
+            CANVAS_HEIGHT / 2 - length / 2,
+            length,
+            length
+        )
+        context.rect(
+            CANVAS_WIDTH / 2 + length / 2 + margin,
+            CANVAS_HEIGHT / 2 - length / 2,
+            length,
+            length
+        )
         context.fillStyle = "#0a132d"
         context.fill()
         // context.rect(CANVAS_WIDTH / 2 - 100, CANVAS_HEIGHT / 2 - 100, 200, 200)
@@ -937,6 +987,7 @@ const draw = () => {
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
     } else {
         renderUpgradeMenu()
+        drawUIElements()
     }
 }
 

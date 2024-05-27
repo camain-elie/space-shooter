@@ -1,6 +1,15 @@
 import { Ship } from "./Ship"
 
-import { INVINCIBILITY_TIME, LASER_RANGE, LASER_SHOOTING_RATE } from "./Game"
+import {
+    CANVAS_HEIGHT,
+    CANVAS_WIDTH,
+    INVINCIBILITY_TIME,
+    LASER_RANGE,
+    LASER_SHOOTING_RATE,
+    MENU_UPGRADE_MARGIN,
+    MENU_UPGRADE_WIDTH,
+} from "./Game"
+import { Coordinates } from "./Vector"
 
 type UpgradeId = "invincibilityTime" | "laserRate" | "laserRange"
 
@@ -13,6 +22,23 @@ interface Upgrade {
     currentUpgrade: number
     maxUpgrade: number
 }
+
+const upgradeBoxesPosition = [
+    {
+        x:
+            CANVAS_WIDTH / 2 -
+            (MENU_UPGRADE_WIDTH + MENU_UPGRADE_WIDTH / 2 + MENU_UPGRADE_MARGIN),
+        y: CANVAS_HEIGHT / 2 - MENU_UPGRADE_WIDTH / 2,
+    },
+    {
+        x: CANVAS_WIDTH / 2 - MENU_UPGRADE_WIDTH / 2,
+        y: CANVAS_HEIGHT / 2 - MENU_UPGRADE_WIDTH / 2,
+    },
+    {
+        x: CANVAS_WIDTH / 2 + MENU_UPGRADE_WIDTH / 2 + MENU_UPGRADE_MARGIN,
+        y: CANVAS_HEIGHT / 2 - MENU_UPGRADE_WIDTH / 2,
+    },
+]
 
 const handleUpgrade = (upgrade: Upgrade, ship: Ship) => {
     const { id, stepUpgrade, currentUpgrade, maxUpgrade } = upgrade
@@ -74,4 +100,36 @@ const initUpgrades = () => {
     return upgradeList
 }
 
-export { Upgrade, handleUpgrade, getUpgradeChoice, initUpgrades }
+const checkClickZone = (
+    zone: Coordinates,
+    click: Coordinates,
+    size: number
+) => {
+    const { x: zoneX, y: zoneY } = zone
+    const { x: clickX, y: clickY } = click
+    const isInXZone = clickX > zoneX && clickX < zoneX + size
+    const isInYZone = clickY > zoneY && clickY < zoneY + size
+    return isInXZone && isInYZone
+}
+
+const handleUpgradeClick = (
+    event: MouseEvent,
+    clickCoordinates: Coordinates
+) => {
+    const { x, y } = clickCoordinates
+    upgradeBoxesPosition.forEach((boxPosition, index) => {
+        if (checkClickZone(boxPosition, clickCoordinates, MENU_UPGRADE_WIDTH))
+            console.log(index)
+    })
+
+    console.log("in")
+    // console.log(event)
+}
+
+export {
+    Upgrade,
+    handleUpgrade,
+    getUpgradeChoice,
+    initUpgrades,
+    handleUpgradeClick,
+}
