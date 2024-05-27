@@ -1,10 +1,6 @@
 import { Ship } from "./Ship"
 
-import {
-    INVINCIBILITY_TIME,
-    LASER_RANGE,
-    LASER_SHOOTING_RATE,
-} from "./constants"
+import { INVINCIBILITY_TIME, LASER_RANGE, LASER_SHOOTING_RATE } from "./Game"
 
 type UpgradeId = "invincibilityTime" | "laserRate" | "laserRange"
 
@@ -18,9 +14,29 @@ interface Upgrade {
     maxUpgrade: number
 }
 
-const upgrade = (upgrade: Upgrade, ship: Ship) => {
+const handleUpgrade = (upgrade: Upgrade, ship: Ship) => {
     const { id, stepUpgrade, currentUpgrade, maxUpgrade } = upgrade
-    if (currentUpgrade < maxUpgrade) ship[id] += stepUpgrade
+    if (currentUpgrade < maxUpgrade) {
+        ship[id] += stepUpgrade
+        upgrade.currentUpgrade++
+    }
+}
+
+const getUpgradeChoice = (ship: Ship) => {
+    const availableUpgrades = ship.upgrades.filter(
+        (upgrade) => upgrade.currentUpgrade < upgrade.maxUpgrade
+    )
+    const randomAvailableUpgrades: Upgrade[] = []
+
+    for (let i = 0; i++; i < 3) {
+        const randomIndex = Math.floor(
+            Math.random() * randomAvailableUpgrades.length
+        )
+        randomAvailableUpgrades.push(availableUpgrades[randomIndex])
+        availableUpgrades.splice(randomIndex, 1)
+    }
+
+    return randomAvailableUpgrades
 }
 
 const initUpgrades = () => {
@@ -57,3 +73,5 @@ const initUpgrades = () => {
     ]
     return upgradeList
 }
+
+export { Upgrade, handleUpgrade, getUpgradeChoice, initUpgrades }

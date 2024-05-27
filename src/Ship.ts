@@ -1,5 +1,6 @@
 import { Coordinates } from "./Vector"
 import { Particule } from "./Particules"
+import { Upgrade } from "./Upgrade"
 
 interface Ship {
     coordinates: Coordinates
@@ -19,6 +20,7 @@ interface Ship {
     lives: number
     level: number
     xp: number
+    upgrades: Upgrade[]
 }
 
 export { Ship }

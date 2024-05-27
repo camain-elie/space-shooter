@@ -1,12 +1,9 @@
 import { Ship } from "./Ship"
 import { Coordinates } from "./Vector"
-import * from "./Particules"
+import { AsteroidParticule, ExplosionParticule } from "./Particules"
+import { initUpgrades } from "./Upgrade"
 
-import {
-    INVINCIBILITY_TIME,
-    LASER_SHOOTING_RATE,
-    LASER_RANGE,
-} from "./constants"
+import { INVINCIBILITY_TIME, LASER_SHOOTING_RATE, LASER_RANGE } from "./Game"
 
 // Canvas constants
 const REFRESH_INTERVAL = 30
@@ -112,6 +109,7 @@ const player: Ship = {
     lives: NUMBER_OF_LIVES,
     level: 1,
     xp: 0,
+    upgrades: initUpgrades(),
 }
 
 const cursorPosition: Coordinates = {
