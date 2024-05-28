@@ -116,18 +116,15 @@ const handleUpgradeClick = (
     event: MouseEvent,
     clickCoordinates: Coordinates
 ) => {
-    const { x, y } = clickCoordinates
     upgradeBoxesPosition.forEach((boxPosition, index) => {
         if (checkClickZone(boxPosition, clickCoordinates, MENU_UPGRADE_WIDTH))
             console.log(index)
     })
-
-    console.log("in")
-    // console.log(event)
 }
 
 export {
     Upgrade,
+    upgradeBoxesPosition,
     handleUpgrade,
     getUpgradeChoice,
     initUpgrades,

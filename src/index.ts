@@ -1,7 +1,11 @@
 import { Ship } from "./Ship"
 import { Coordinates } from "./Vector"
 import { AsteroidParticule, ExplosionParticule } from "./Particules"
-import { initUpgrades, handleUpgradeClick } from "./Upgrade"
+import {
+    upgradeBoxesPosition,
+    initUpgrades,
+    handleUpgradeClick,
+} from "./Upgrade"
 
 import {
     INVINCIBILITY_TIME,
@@ -904,52 +908,14 @@ const renderUpgradeMenu = () => {
     drawUIElements()
 
     drawMessage("Choose an upgrade", false, 150)
-    const length = MENU_UPGRADE_WIDTH
-    const margin = MENU_UPGRADE_MARGIN
     if (context) {
-        context.rect(
-            CANVAS_WIDTH / 2 - length / 2,
-            CANVAS_HEIGHT / 2 - length / 2,
-            length,
-            length
-        )
-        context.rect(
-            CANVAS_WIDTH / 2 - (length + length / 2 + margin),
-            CANVAS_HEIGHT / 2 - length / 2,
-            length,
-            length
-        )
-        context.rect(
-            CANVAS_WIDTH / 2 + length / 2 + margin,
-            CANVAS_HEIGHT / 2 - length / 2,
-            length,
-            length
-        )
-        context.stroke()
-        context.rect(
-            CANVAS_WIDTH / 2 - length / 2,
-            CANVAS_HEIGHT / 2 - length / 2,
-            length,
-            length
-        )
-        context.rect(
-            CANVAS_WIDTH / 2 - (length + length / 2 + margin),
-            CANVAS_HEIGHT / 2 - length / 2,
-            length,
-            length
-        )
-        context.rect(
-            CANVAS_WIDTH / 2 + length / 2 + margin,
-            CANVAS_HEIGHT / 2 - length / 2,
-            length,
-            length
-        )
-        context.fillStyle = "#0a132d"
-        context.fill()
-        // context.rect(CANVAS_WIDTH / 2 - 100, CANVAS_HEIGHT / 2 - 100, 200, 200)
-        // context.rect(CANVAS_WIDTH / 2 - 350, CANVAS_HEIGHT / 2 - 100, 200, 200)
-        // context.rect(CANVAS_WIDTH / 2 + 150, CANVAS_HEIGHT / 2 - 100, 200, 200)
-        // context.stroke()
+        upgradeBoxesPosition.forEach((upgradeBox, index) => {
+            const { x, y } = upgradeBox
+            context.rect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
+            context.stroke()
+            context.fillStyle = "#0a132d"
+            context.fill()
+        })
     }
 }
 
