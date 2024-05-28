@@ -54,12 +54,14 @@ const getUpgradeChoice = (ship: Ship) => {
     )
     const randomAvailableUpgrades: Upgrade[] = []
 
-    for (let i = 0; i++; i < 3) {
-        const randomIndex = Math.floor(
-            Math.random() * randomAvailableUpgrades.length
-        )
-        randomAvailableUpgrades.push(availableUpgrades[randomIndex])
-        availableUpgrades.splice(randomIndex, 1)
+    for (let i = 0; i < 3; i++) {
+        if (availableUpgrades.length) {
+            const randomIndex = Math.floor(
+                Math.random() * availableUpgrades.length
+            )
+            randomAvailableUpgrades.push(availableUpgrades[randomIndex])
+            availableUpgrades.splice(randomIndex, 1)
+        }
     }
 
     return randomAvailableUpgrades
@@ -75,6 +77,7 @@ const initUpgrades = () => {
             baseValue: INVINCIBILITY_TIME,
             stepUpgrade: 0.2,
             currentUpgrade: 0,
+            // maxUpgrade: 3,
             maxUpgrade: 10,
         },
         {
@@ -84,8 +87,9 @@ const initUpgrades = () => {
                 "Determine the distance a laser can cover before vanishing",
             baseValue: LASER_RANGE,
             stepUpgrade: 20,
-            currentUpgrade: 1,
+            currentUpgrade: 0,
             maxUpgrade: 20,
+            // maxUpgrade: 3,
         },
         {
             id: "laserRate",
@@ -95,6 +99,7 @@ const initUpgrades = () => {
             stepUpgrade: 1,
             currentUpgrade: 0,
             maxUpgrade: 26,
+            // maxUpgrade: 3,
         },
     ]
     return upgradeList
@@ -113,13 +118,48 @@ const checkClickZone = (
 }
 
 const handleUpgradeClick = (
-    event: MouseEvent,
-    clickCoordinates: Coordinates
+    clickCoordinates: Coordinates,
+    player: Ship,
+    toggleMenu: () => void
 ) => {
+    let clickedIndex = -1
     upgradeBoxesPosition.forEach((boxPosition, index) => {
         if (checkClickZone(boxPosition, clickCoordinates, MENU_UPGRADE_WIDTH))
-            console.log(index)
+            clickedIndex = index
     })
+    if (player.upgradeChoice[clickedIndex]) {
+        handleUpgrade(player.upgradeChoice[clickedIndex], player)
+        toggleMenu()
+    }
+}
+
+const renderUpgradeToString = (
+    upgrade: Upgrade,
+    coordinates: Coordinates,
+    color: string,
+    context: CanvasRenderingContext2D
+) => {
+    const lineHeight = 15
+    const { id, name, description, currentUpgrade, maxUpgrade } = upgrade
+    const { x, y } = coordinates
+    console.log(name)
+    // context.font = "16px sans-serif"
+    context.textAlign = "left"
+    context.fillStyle = color
+    context.fillText(name, x + 10, y + 30, MENU_UPGRADE_WIDTH - 20)
+    context.fillText(description, x + 10, y + 60, MENU_UPGRADE_WIDTH - 20)
+    context.fillText(
+        `Current upgrade level : ${currentUpgrade}`,
+        x + 10,
+        y + 90,
+        MENU_UPGRADE_WIDTH - 20
+    )
+    context.fillText(
+        `Max level : ${maxUpgrade}`,
+        x + 10,
+        y + 120,
+        MENU_UPGRADE_WIDTH - 20
+    )
 }
 
 export {
@@ -129,4 +169,5 @@ export {
     getUpgradeChoice,
     initUpgrades,
     handleUpgradeClick,
+    renderUpgradeToString,
 }

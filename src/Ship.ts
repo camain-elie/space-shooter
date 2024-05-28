@@ -17,10 +17,12 @@ interface Ship {
     laserRange: number
     lasers: Particule[]
     invincibilityTime: number
+    invincibilityLeft: number
     lives: number
     level: number
     xp: number
     upgrades: Upgrade[]
+    upgradeChoice: Upgrade[]
 }
 
 export { Ship }

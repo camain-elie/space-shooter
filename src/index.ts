@@ -5,6 +5,8 @@ import {
     upgradeBoxesPosition,
     initUpgrades,
     handleUpgradeClick,
+    getUpgradeChoice,
+    renderUpgradeToString,
 } from "./Upgrade"
 
 import {
@@ -14,13 +16,13 @@ import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     MENU_UPGRADE_WIDTH,
-    MENU_UPGRADE_MARGIN,
 } from "./Game"
 
 // Canvas constants
 const REFRESH_INTERVAL = 30
 // Game constants
 const NEW_GAME_DELAY = 2
+const MENU_CHOICE_DELAY = 1
 const NUMBER_OF_LIVES = 3
 const XP_BAR_LENGTH = 300
 const XP_BAR_HEIGHT = 10
@@ -49,6 +51,7 @@ let startGame = true
 let endGame = false
 let isPaused = false
 let upgradeMenu = false
+let menuDelay = 0
 let newGameDelay = 0
 let laserTicking = 0
 
@@ -115,11 +118,13 @@ const player: Ship = {
     laserRate: LASER_SHOOTING_RATE,
     laserRange: LASER_RANGE,
     lasers: [],
-    invincibilityTime: 0,
+    invincibilityTime: INVINCIBILITY_TIME,
+    invincibilityLeft: 0,
     lives: NUMBER_OF_LIVES,
     level: 1,
     xp: 0,
     upgrades: initUpgrades(),
+    upgradeChoice: [],
 }
 
 const cursorPosition: Coordinates = {
@@ -141,6 +146,8 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
 gameCanvas.onclick = () => {
     if (startGame) startGame = false
     if (endGame && !newGameDelay) restartGame()
+    if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL)
+        handleUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
 }
 
 gameCanvas.onmousedown = () => {
@@ -198,8 +205,13 @@ const initWave = () => {
 
     initAsteroids()
     if (wave % 3 === 0) createGigaAsteroid()
-    player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
+    startPlayerInvincibility()
 }
+
+const startPlayerInvincibility = () =>
+    (player.invincibilityLeft = Math.floor(
+        player.invincibilityTime * REFRESH_INTERVAL
+    ))
 
 const getAcceleration = () => {
     if (player.distanceToCursor <= 20 && player.speed) {
@@ -287,20 +299,18 @@ const getShipOrientationVector = () => {
 const handleXp = (asteroid: Asteroid) => {
     const { type } = asteroid
     player.xp += type === 4 ? 50 : 4 - type
+
     if (player.xp > player.level * NEXT_LEVEL_XP) {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
-        upgradeMenu = true
-        // const f = (a: MouseEvent, b: number) => console.log(a, b)
-        gameCanvas.onclick = (event: MouseEvent) =>
-            handleUpgradeClick(event, cursorPosition)
-        player.laserRange += 20
-        if (
-            player.laserRate < 29 &&
-            (player.laserRate < 10 || player.level % 3 === 0)
-        )
-            player.laserRate += 1
+        player.upgradeChoice = getUpgradeChoice(player)
+        if (player.upgradeChoice.length) upgradeMenu = true
     }
+}
+
+const turnOffUpgradeMenu = () => {
+    upgradeMenu = false
+    menuDelay = 0
 }
 
 // DRAW
@@ -363,21 +373,27 @@ const drawShipSprite = (x: number, y: number) => {
     }
 }
 
-const drawPlayer = () => {
-    const { invincibilityTime } = player
+const handlePlayer = () => {
     if (context) {
         player.distanceToCursor = getDistance(
             cursorPosition,
             player.coordinates
         )
-        const shipRotation = getShipOrientationVector()
-        if (player.distanceToCursor > 50) player.angle = shipRotation
         getAcceleration()
         updateShipPosition()
 
-        if (invincibilityTime) {
-            context.strokeStyle = invincibilityTime
-                ? `rgba(255,255,255, ${(invincibilityTime % 6) / 10})`
+        drawPlayer()
+    }
+}
+
+const drawPlayer = () => {
+    if (context) {
+        const shipRotation = getShipOrientationVector()
+
+        const { invincibilityLeft } = player
+        if (invincibilityLeft) {
+            context.strokeStyle = invincibilityLeft
+                ? `rgba(255,255,255, ${(invincibilityLeft % 6) / 10})`
                 : "white"
         } else if (!player.lives) context.strokeStyle = "red"
         context.translate(player.coordinates.x, player.coordinates.y)
@@ -851,23 +867,21 @@ const createBackground = () => {
 }
 
 const detectPlayerCollision = () => {
-    const { coordinates, invincibilityTime } = player
+    const { coordinates, invincibilityLeft } = player
     if (!player.lives) return
 
-    if (invincibilityTime) player.invincibilityTime--
+    if (invincibilityLeft) player.invincibilityLeft--
     else {
         asteroids.forEach((asteroid) => {
             const { size, coordinates: asteroidPosition } = asteroid
             if (
-                !player.invincibilityTime &&
+                !player.invincibilityLeft &&
                 (getDistance(coordinates, asteroidPosition) < size ||
                     getDistance(player.leftWing, asteroidPosition) < size ||
                     getDistance(player.rightWing, asteroidPosition) < size)
             ) {
                 player.lives--
-                if (player.lives > 0)
-                    player.invincibilityTime =
-                        INVINCIBILITY_TIME * REFRESH_INTERVAL
+                if (player.lives > 0) startPlayerInvincibility()
                 else {
                     createExplosion(player.coordinates)
                     endGame = true
@@ -897,6 +911,7 @@ const drawMessage = (
 }
 
 const renderUpgradeMenu = () => {
+    menuDelay++
     // render the background element without moving them
     context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
     drawAsteroidParticules()
@@ -909,12 +924,23 @@ const renderUpgradeMenu = () => {
 
     drawMessage("Choose an upgrade", false, 150)
     if (context) {
-        upgradeBoxesPosition.forEach((upgradeBox, index) => {
-            const { x, y } = upgradeBox
+        player.upgradeChoice.forEach((upgrade, index) => {
+            const { x, y } = upgradeBoxesPosition[index]
+            context.beginPath()
             context.rect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
             context.stroke()
-            context.fillStyle = "#0a132d"
-            context.fill()
+            context.clearRect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
+            const color =
+                menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
+                    ? "white"
+                    : "rgba(255,255,255,0.5)"
+            renderUpgradeToString(
+                player.upgradeChoice[index],
+                { x, y },
+                color,
+                context
+            )
+            context.closePath()
         })
     }
 }
@@ -928,7 +954,7 @@ const draw = () => {
         handleExplosions()
         drawUIElements()
         if (!endGame && !startGame) {
-            drawPlayer()
+            handlePlayer()
             handleLasers()
             detectPlayerCollision()
         } else {
