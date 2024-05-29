@@ -8,10 +8,11 @@ import {
     LASER_SHOOTING_RATE,
     MENU_UPGRADE_MARGIN,
     MENU_UPGRADE_WIDTH,
-} from "./Game"
+    SHIP_MAX_SPEED,
+} from "./Constants"
 import { Coordinates } from "./Vector"
 
-type UpgradeId = "invincibilityTime" | "laserRate" | "laserRange"
+type UpgradeId = "invincibilityTime" | "laserRate" | "laserRange" | "maxSpeed"
 
 interface Upgrade {
     id: UpgradeId
@@ -77,8 +78,7 @@ const initUpgrades = () => {
             baseValue: INVINCIBILITY_TIME,
             stepUpgrade: 0.2,
             currentUpgrade: 0,
-            // maxUpgrade: 3,
-            maxUpgrade: 10,
+            maxUpgrade: 15,
         },
         {
             id: "laserRange",
@@ -88,8 +88,7 @@ const initUpgrades = () => {
             baseValue: LASER_RANGE,
             stepUpgrade: 20,
             currentUpgrade: 0,
-            maxUpgrade: 20,
-            // maxUpgrade: 3,
+            maxUpgrade: 30,
         },
         {
             id: "laserRate",
@@ -99,7 +98,15 @@ const initUpgrades = () => {
             stepUpgrade: 1,
             currentUpgrade: 0,
             maxUpgrade: 26,
-            // maxUpgrade: 3,
+        },
+        {
+            id: "maxSpeed",
+            name: "Ship max speed",
+            description: "The max speed the ship can reach",
+            baseValue: SHIP_MAX_SPEED,
+            stepUpgrade: 0.2,
+            currentUpgrade: 0,
+            maxUpgrade: 15,
         },
     ]
     return upgradeList
@@ -139,11 +146,9 @@ const renderUpgradeToString = (
     color: string,
     context: CanvasRenderingContext2D
 ) => {
-    const lineHeight = 15
-    const { id, name, description, currentUpgrade, maxUpgrade } = upgrade
+    // need to develop a whole set of string rendering functions later
+    const { name, description, currentUpgrade, maxUpgrade } = upgrade
     const { x, y } = coordinates
-    console.log(name)
-    // context.font = "16px sans-serif"
     context.textAlign = "left"
     context.fillStyle = color
     context.fillText(name, x + 10, y + 30, MENU_UPGRADE_WIDTH - 20)

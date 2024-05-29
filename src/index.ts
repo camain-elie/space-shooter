@@ -13,10 +13,11 @@ import {
     INVINCIBILITY_TIME,
     LASER_SHOOTING_RATE,
     LASER_RANGE,
+    SHIP_MAX_SPEED,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     MENU_UPGRADE_WIDTH,
-} from "./Game"
+} from "./Constants"
 
 // Canvas constants
 const REFRESH_INTERVAL = 30
@@ -30,7 +31,6 @@ const NEXT_LEVEL_XP = 30
 // Ship constants
 const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
-const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 // Laser constants
 const LASER_SHOT_SPEED = 1000
@@ -113,6 +113,7 @@ const player: Ship = {
     },
     angle: 0,
     speed: 0,
+    maxSpeed: SHIP_MAX_SPEED,
     distanceToCursor: 0,
     firing: false,
     laserRate: LASER_SHOOTING_RATE,
@@ -195,9 +196,11 @@ const restartGame = () => {
     player.xp = 0
     player.lasers.length = 0
     player.lives = NUMBER_OF_LIVES
+    player.upgrades = initUpgrades()
     player.invincibilityTime = INVINCIBILITY_TIME
     player.laserRange = LASER_RANGE
     player.laserRate = LASER_SHOOTING_RATE
+    player.maxSpeed = SHIP_MAX_SPEED
 }
 
 const initWave = () => {
@@ -214,12 +217,13 @@ const startPlayerInvincibility = () =>
     ))
 
 const getAcceleration = () => {
-    if (player.distanceToCursor <= 20 && player.speed) {
+    const { distanceToCursor, speed, maxSpeed } = player
+    if (distanceToCursor <= 20 && speed) {
         player.speed = 0
-    } else if (player.speed < SHIP_MAX_SPEED && player.distanceToCursor > 50) {
-        const newSpeed = player.speed + SHIP_ACCELERATION / REFRESH_INTERVAL
-        player.speed = newSpeed > SHIP_MAX_SPEED ? SHIP_MAX_SPEED : newSpeed
-    } else if (player.speed > 3 && player.distanceToCursor <= 50) {
+    } else if (speed < maxSpeed && distanceToCursor > 50) {
+        const newSpeed = speed + SHIP_ACCELERATION / REFRESH_INTERVAL
+        player.speed = newSpeed > maxSpeed ? maxSpeed : newSpeed
+    } else if (speed > 3 && player.distanceToCursor <= 50) {
         const newSpeed = player.speed - SHIP_ACCELERATION / REFRESH_INTERVAL
         player.speed = newSpeed < 0 ? 1 : newSpeed
     }

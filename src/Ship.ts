@@ -11,6 +11,7 @@ interface Ship {
     directionVector: Coordinates
     angle: number
     speed: number
+    maxSpeed: number
     distanceToCursor: number
     firing: boolean
     laserRate: number
