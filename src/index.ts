@@ -166,6 +166,8 @@ window.onkeydown = (event: KeyboardEvent) => {
         isPaused = !isPaused
 }
 
+gameCanvas.oncontextmenu = (event: MouseEvent) => event.preventDefault()
+
 // UTILS
 const getDistance = (a: Coordinates, b: Coordinates) => {
     const xDiff = a.x - b.x,
