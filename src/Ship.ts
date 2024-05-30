@@ -10,6 +10,7 @@ interface Ship {
     relativeDirectionVector: Coordinates
     directionVector: Coordinates
     angle: number
+    acceleration: number
     speed: number
     maxSpeed: number
     distanceToCursor: number

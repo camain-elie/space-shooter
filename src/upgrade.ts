@@ -8,11 +8,17 @@ import {
     LASER_SHOOTING_RATE,
     MENU_UPGRADE_MARGIN,
     MENU_UPGRADE_WIDTH,
+    SHIP_ACCELERATION,
     SHIP_MAX_SPEED,
 } from "./Constants"
 import { Coordinates } from "./Vector"
 
-type UpgradeId = "invincibilityTime" | "laserRate" | "laserRange" | "maxSpeed"
+type UpgradeId =
+    | "invincibilityTime"
+    | "laserRate"
+    | "laserRange"
+    | "maxSpeed"
+    | "acceleration"
 
 interface Upgrade {
     id: UpgradeId
@@ -104,6 +110,15 @@ const initUpgrades = () => {
             name: "Ship max speed",
             description: "The max speed the ship can reach",
             baseValue: SHIP_MAX_SPEED,
+            stepUpgrade: 0.2,
+            currentUpgrade: 0,
+            maxUpgrade: 15,
+        },
+        {
+            id: "acceleration",
+            name: "Ship Accelaration",
+            description: "Time for the ship to gain speed",
+            baseValue: SHIP_ACCELERATION,
             stepUpgrade: 0.2,
             currentUpgrade: 0,
             maxUpgrade: 15,

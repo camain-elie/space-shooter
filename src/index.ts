@@ -17,6 +17,7 @@ import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     MENU_UPGRADE_WIDTH,
+    SHIP_ACCELERATION,
 } from "./Constants"
 
 // Canvas constants
@@ -31,7 +32,6 @@ const NEXT_LEVEL_XP = 30
 // Ship constants
 const SHIP_WIDTH = 10
 const SHIP_LENGTH = 20
-const SHIP_ACCELERATION = 3
 // Laser constants
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
@@ -112,6 +112,7 @@ const player: Ship = {
         y: CANVAS_HEIGHT / 2,
     },
     angle: 0,
+    acceleration: SHIP_ACCELERATION,
     speed: 0,
     maxSpeed: SHIP_MAX_SPEED,
     distanceToCursor: 0,
@@ -201,6 +202,7 @@ const restartGame = () => {
     player.laserRange = LASER_RANGE
     player.laserRate = LASER_SHOOTING_RATE
     player.maxSpeed = SHIP_MAX_SPEED
+    player.acceleration = SHIP_ACCELERATION
 }
 
 const initWave = () => {
@@ -217,14 +219,14 @@ const startPlayerInvincibility = () =>
     ))
 
 const getAcceleration = () => {
-    const { distanceToCursor, speed, maxSpeed } = player
+    const { distanceToCursor, speed, maxSpeed, acceleration } = player
     if (distanceToCursor <= 20 && speed) {
         player.speed = 0
     } else if (speed < maxSpeed && distanceToCursor > 50) {
-        const newSpeed = speed + SHIP_ACCELERATION / REFRESH_INTERVAL
+        const newSpeed = speed + acceleration / REFRESH_INTERVAL
         player.speed = newSpeed > maxSpeed ? maxSpeed : newSpeed
     } else if (speed > 3 && player.distanceToCursor <= 50) {
-        const newSpeed = player.speed - SHIP_ACCELERATION / REFRESH_INTERVAL
+        const newSpeed = player.speed - acceleration / REFRESH_INTERVAL
         player.speed = newSpeed < 0 ? 1 : newSpeed
     }
 }
