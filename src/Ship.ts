@@ -13,6 +13,7 @@ import {
     SHIP_MAX_SPEED,
     SHIP_WIDTH,
 } from "./Constants"
+import { SpecialUpgrade } from "./SpecialUpgrade"
 
 interface Ship {
     coordinates: Coordinates
@@ -37,6 +38,7 @@ interface Ship {
     xp: number
     upgrades: Upgrade[]
     upgradeChoice: Upgrade[]
+    specialUpgrade: SpecialUpgrade[]
 }
 
 const initShip = (): Ship => ({
@@ -80,6 +82,7 @@ const initShip = (): Ship => ({
     xp: 0,
     upgrades: initUpgrades(),
     upgradeChoice: [],
+    specialUpgrade: [],
 })
 
 export { Ship, initShip }

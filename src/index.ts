@@ -41,19 +41,22 @@ import {
     initAsteroids,
     moveAsteroids,
 } from "./Asteroid"
+import { handleSecondaryLasers } from "./SpecialUpgrade"
 
 // Game constants
 const NEW_GAME_DELAY = 2
 const MENU_CHOICE_DELAY = 1
 const XP_BAR_LENGTH = 300
 const XP_BAR_HEIGHT = 10
-const NEXT_LEVEL_XP = 30
+const NEXT_LEVEL_XP = 1
+// const NEXT_LEVEL_XP = 30
 // Laser constants
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
 
 let currentInterval = 0
-let wave = 1
+// let wave = 1
+let wave = 15
 let startGame = true
 let endGame = false
 let isPaused = false
@@ -441,6 +444,7 @@ const createNewLaser = () => {
             },
             createdPosition: { ...player.coordinates },
         })
+        handleSecondaryLasers(player)
     }
 }
 
