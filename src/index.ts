@@ -117,6 +117,8 @@ window.onkeydown = (event: KeyboardEvent) => {
         isPaused = !isPaused
 }
 
+gameCanvas.oncontextmenu = (event: MouseEvent) => event.preventDefault()
+
 const restartGame = () => {
     endGame = false
     wave = 0
