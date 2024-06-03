@@ -8,7 +8,6 @@ import {
 } from "./Vector"
 import { AsteroidParticule, ExplosionParticule } from "./Particules"
 import {
-    upgradeBoxesPosition,
     initUpgrades,
     handleUpgradeClick,
     getUpgradeChoice,
@@ -22,7 +21,6 @@ import {
     SHIP_MAX_SPEED,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    MENU_UPGRADE_WIDTH,
     SHIP_ACCELERATION,
     SHIP_LENGTH,
     SHIP_WIDTH,
@@ -41,7 +39,13 @@ import {
     initAsteroids,
     moveAsteroids,
 } from "./Asteroid"
-import { handleSecondaryLasers } from "./SpecialUpgrade"
+import {
+    getSpecialUpgradesChoice,
+    handleSecondaryLasers,
+    handleSpecialUpgradeClick,
+    renderSpecialUpgrade,
+} from "./SpecialUpgrade"
+import { menuBoxesPosition, renderMenu } from "./Menu"
 
 // Game constants
 const NEW_GAME_DELAY = 2
@@ -56,7 +60,7 @@ const LASER_SHOT_LENGTH = 10
 
 let currentInterval = 0
 // let wave = 1
-let wave = 15
+let wave = 1
 let startGame = true
 let endGame = false
 let isPaused = false
@@ -102,8 +106,15 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
 gameCanvas.onclick = () => {
     if (startGame) startGame = false
     if (endGame && !newGameDelay) restartGame()
-    if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL)
-        handleUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
+    if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL) {
+        player.level % 15 === 0
+            ? handleSpecialUpgradeClick(
+                  cursorPosition,
+                  player,
+                  turnOffUpgradeMenu
+              )
+            : handleUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
+    }
 }
 
 gameCanvas.onmousedown = () => {
@@ -243,8 +254,13 @@ const handleXp = (asteroid: Asteroid) => {
     if (player.xp > player.level * NEXT_LEVEL_XP) {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
-        player.upgradeChoice = getUpgradeChoice(player)
-        if (player.upgradeChoice.length) upgradeMenu = true
+        if (player.level % 15 === 0) {
+            player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
+            if (player.specialUpgradeChoice.length) upgradeMenu = true
+        } else {
+            player.upgradeChoice = getUpgradeChoice(player)
+            if (player.upgradeChoice.length) upgradeMenu = true
+        }
     }
 }
 
@@ -703,28 +719,35 @@ const renderUpgradeMenu = () => {
         drawLasers()
         drawPlayer()
         drawUIElements()
-    }
 
-    drawMessage("Choose an upgrade", false, 150)
-    if (context) {
-        player.upgradeChoice.forEach((upgrade, index) => {
-            const { x, y } = upgradeBoxesPosition[index]
-            context.beginPath()
-            context.rect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
-            context.stroke()
-            context.clearRect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
-            const color =
-                menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
-                    ? "white"
-                    : "rgba(255,255,255,0.5)"
-            renderUpgradeToString(
-                player.upgradeChoice[index],
-                { x, y },
-                color,
-                context
-            )
-            context.closePath()
-        })
+        renderMenu(context, () => drawMessage("Choose an upgrade", false, 150))
+        const color =
+            menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
+                ? "white"
+                : "rgba(255,255,255,0.5)"
+        if (player.level % 15 === 0) {
+            player.specialUpgradeChoice.forEach((item, index) => {
+                const { x, y } = menuBoxesPosition[index]
+                renderSpecialUpgrade(
+                    player.specialUpgradeChoice[index],
+                    { x, y },
+                    color,
+                    context
+                )
+                context.closePath()
+            })
+        } else {
+            player.upgradeChoice.forEach((item, index) => {
+                const { x, y } = menuBoxesPosition[index]
+                renderUpgradeToString(
+                    player.upgradeChoice[index],
+                    { x, y },
+                    color,
+                    context
+                )
+                context.closePath()
+            })
+        }
     }
 }
 

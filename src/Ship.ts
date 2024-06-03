@@ -39,6 +39,7 @@ interface Ship {
     upgrades: Upgrade[]
     upgradeChoice: Upgrade[]
     specialUpgrade: SpecialUpgrade[]
+    specialUpgradeChoice: SpecialUpgrade[]
 }
 
 const initShip = (): Ship => ({
@@ -79,10 +80,11 @@ const initShip = (): Ship => ({
     invincibilityLeft: 0,
     lives: NUMBER_OF_LIVES,
     level: 1,
-    xp: 0,
+    xp: 30000,
     upgrades: initUpgrades(),
     upgradeChoice: [],
     specialUpgrade: [],
+    specialUpgradeChoice: [],
 })
 
 export { Ship, initShip }
