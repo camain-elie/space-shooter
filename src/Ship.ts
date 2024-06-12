@@ -80,7 +80,7 @@ const initShip = (): Ship => ({
     invincibilityLeft: 0,
     lives: NUMBER_OF_LIVES,
     level: 1,
-    xp: 30000,
+    xp: 0,
     upgrades: initUpgrades(),
     upgradeChoice: [],
     specialUpgrade: [],
