@@ -37,16 +37,17 @@ const checkClickZone = (
 
 const renderMenu = (
     context: CanvasRenderingContext2D,
-    titleRenderer: () => void
+    titleRenderer: () => void,
+    numberOfChoice: number
 ) => {
     titleRenderer()
-    menuBoxesPosition.forEach((box) => {
-        const { x, y } = box
+    for (let i = 0; i < numberOfChoice; i++) {
+        const { x, y } = menuBoxesPosition[i]
         context.beginPath()
         context.rect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
         context.stroke()
         context.clearRect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
-    })
+    }
 }
 
 export { menuBoxesPosition, checkClickZone, renderMenu }

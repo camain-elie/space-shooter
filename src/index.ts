@@ -52,14 +52,12 @@ const NEW_GAME_DELAY = 2
 const MENU_CHOICE_DELAY = 1
 const XP_BAR_LENGTH = 300
 const XP_BAR_HEIGHT = 10
-const NEXT_LEVEL_XP = 1
-// const NEXT_LEVEL_XP = 30
+const NEXT_LEVEL_XP = 30
 // Laser constants
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
 
 let currentInterval = 0
-// let wave = 1
 let wave = 1
 let startGame = true
 let endGame = false
@@ -107,7 +105,7 @@ gameCanvas.onclick = () => {
     if (startGame) startGame = false
     if (endGame && !newGameDelay) restartGame()
     if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL) {
-        player.level % 15 === 0
+        isUpgradeSpecial()
             ? handleSpecialUpgradeClick(
                   cursorPosition,
                   player,
@@ -254,15 +252,15 @@ const handleXp = (asteroid: Asteroid) => {
     if (player.xp > player.level * NEXT_LEVEL_XP) {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
-        if (player.level % 15 === 0) {
-            player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
-            if (player.specialUpgradeChoice.length) upgradeMenu = true
-        } else {
-            player.upgradeChoice = getUpgradeChoice(player)
-            if (player.upgradeChoice.length) upgradeMenu = true
-        }
+        player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
+        player.upgradeChoice = getUpgradeChoice(player)
+        if (isUpgradeSpecial()) upgradeMenu = true
+        else if (player.upgradeChoice.length) upgradeMenu = true
     }
 }
+
+const isUpgradeSpecial = () =>
+    player.level % 15 === 0 && player.specialUpgradeChoice.length
 
 const turnOffUpgradeMenu = () => {
     upgradeMenu = false
@@ -301,8 +299,10 @@ const drawUIElements = () => {
             XP_BAR_LENGTH,
             XP_BAR_HEIGHT
         )
-        const xpFillLength =
+        const xpRatioLenght =
             (player.xp * XP_BAR_LENGTH) / (player.level * NEXT_LEVEL_XP)
+        let xpFillLength =
+            xpRatioLenght > XP_BAR_LENGTH ? XP_BAR_LENGTH : xpRatioLenght
         context.fillRect(
             CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
             20,
@@ -709,6 +709,7 @@ const drawMessage = (
 
 const renderUpgradeMenu = () => {
     menuDelay++
+    const { specialUpgradeChoice, upgradeChoice } = player
     // render the background element without moving them
     if (context) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
@@ -720,16 +721,27 @@ const renderUpgradeMenu = () => {
         drawPlayer()
         drawUIElements()
 
-        renderMenu(context, () => drawMessage("Choose an upgrade", false, 150))
+        renderMenu(
+            context,
+            () => drawMessage("Choose an upgrade", false, 150),
+            isUpgradeSpecial()
+                ? specialUpgradeChoice.length
+                : upgradeChoice.length
+        )
         const color =
             menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
                 ? "white"
                 : "rgba(255,255,255,0.5)"
-        if (player.level % 15 === 0) {
-            player.specialUpgradeChoice.forEach((item, index) => {
+        if (isUpgradeSpecial()) {
+            renderMenu(
+                context,
+                () => drawMessage("Choose an upgrade", false, 150),
+                player.specialUpgradeChoice.length
+            )
+            specialUpgradeChoice.forEach((item, index) => {
                 const { x, y } = menuBoxesPosition[index]
                 renderSpecialUpgrade(
-                    player.specialUpgradeChoice[index],
+                    specialUpgradeChoice[index],
                     { x, y },
                     color,
                     context
@@ -737,10 +749,10 @@ const renderUpgradeMenu = () => {
                 context.closePath()
             })
         } else {
-            player.upgradeChoice.forEach((item, index) => {
+            upgradeChoice.forEach((item, index) => {
                 const { x, y } = menuBoxesPosition[index]
                 renderUpgradeToString(
-                    player.upgradeChoice[index],
+                    upgradeChoice[index],
                     { x, y },
                     color,
                     context
