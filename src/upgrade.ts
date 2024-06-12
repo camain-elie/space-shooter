@@ -1,17 +1,15 @@
 import { Ship } from "./Ship"
 
 import {
-    CANVAS_HEIGHT,
-    CANVAS_WIDTH,
     INVINCIBILITY_TIME,
     LASER_RANGE,
     LASER_SHOOTING_RATE,
-    MENU_UPGRADE_MARGIN,
     MENU_UPGRADE_WIDTH,
     SHIP_ACCELERATION,
     SHIP_MAX_SPEED,
 } from "./Constants"
 import { Coordinates } from "./Vector"
+import { checkClickZone, menuBoxesPosition } from "./Menu"
 
 type UpgradeId =
     | "invincibilityTime"
@@ -29,23 +27,6 @@ interface Upgrade {
     currentUpgrade: number
     maxUpgrade: number
 }
-
-const upgradeBoxesPosition = [
-    {
-        x:
-            CANVAS_WIDTH / 2 -
-            (MENU_UPGRADE_WIDTH + MENU_UPGRADE_WIDTH / 2 + MENU_UPGRADE_MARGIN),
-        y: CANVAS_HEIGHT / 2 - MENU_UPGRADE_WIDTH / 2,
-    },
-    {
-        x: CANVAS_WIDTH / 2 - MENU_UPGRADE_WIDTH / 2,
-        y: CANVAS_HEIGHT / 2 - MENU_UPGRADE_WIDTH / 2,
-    },
-    {
-        x: CANVAS_WIDTH / 2 + MENU_UPGRADE_WIDTH / 2 + MENU_UPGRADE_MARGIN,
-        y: CANVAS_HEIGHT / 2 - MENU_UPGRADE_WIDTH / 2,
-    },
-]
 
 const handleUpgrade = (upgrade: Upgrade, ship: Ship) => {
     const { id, stepUpgrade, currentUpgrade, maxUpgrade } = upgrade
@@ -127,25 +108,13 @@ const initUpgrades = () => {
     return upgradeList
 }
 
-const checkClickZone = (
-    zone: Coordinates,
-    click: Coordinates,
-    size: number
-) => {
-    const { x: zoneX, y: zoneY } = zone
-    const { x: clickX, y: clickY } = click
-    const isInXZone = clickX > zoneX && clickX < zoneX + size
-    const isInYZone = clickY > zoneY && clickY < zoneY + size
-    return isInXZone && isInYZone
-}
-
 const handleUpgradeClick = (
     clickCoordinates: Coordinates,
     player: Ship,
     toggleMenu: () => void
 ) => {
     let clickedIndex = -1
-    upgradeBoxesPosition.forEach((boxPosition, index) => {
+    menuBoxesPosition.forEach((boxPosition, index) => {
         if (checkClickZone(boxPosition, clickCoordinates, MENU_UPGRADE_WIDTH))
             clickedIndex = index
     })
@@ -184,7 +153,6 @@ const renderUpgradeToString = (
 
 export {
     Upgrade,
-    upgradeBoxesPosition,
     handleUpgrade,
     getUpgradeChoice,
     initUpgrades,

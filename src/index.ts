@@ -8,7 +8,6 @@ import {
 } from "./Vector"
 import { AsteroidParticule, ExplosionParticule } from "./Particules"
 import {
-    upgradeBoxesPosition,
     initUpgrades,
     handleUpgradeClick,
     getUpgradeChoice,
@@ -22,7 +21,6 @@ import {
     SHIP_MAX_SPEED,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    MENU_UPGRADE_WIDTH,
     SHIP_ACCELERATION,
     SHIP_LENGTH,
     SHIP_WIDTH,
@@ -41,6 +39,13 @@ import {
     initAsteroids,
     moveAsteroids,
 } from "./Asteroid"
+import {
+    getSpecialUpgradesChoice,
+    handleSecondaryLasers,
+    handleSpecialUpgradeClick,
+    renderSpecialUpgrade,
+} from "./SpecialUpgrade"
+import { menuBoxesPosition, renderMenu } from "./Menu"
 
 // Game constants
 const NEW_GAME_DELAY = 2
@@ -99,8 +104,15 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
 gameCanvas.onclick = () => {
     if (startGame) startGame = false
     if (endGame && !newGameDelay) restartGame()
-    if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL)
-        handleUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
+    if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL) {
+        isUpgradeSpecial()
+            ? handleSpecialUpgradeClick(
+                  cursorPosition,
+                  player,
+                  turnOffUpgradeMenu
+              )
+            : handleUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
+    }
 }
 
 gameCanvas.onmousedown = () => {
@@ -240,10 +252,15 @@ const handleXp = (asteroid: Asteroid) => {
     if (player.xp > player.level * NEXT_LEVEL_XP) {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
+        player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
         player.upgradeChoice = getUpgradeChoice(player)
-        if (player.upgradeChoice.length) upgradeMenu = true
+        if (isUpgradeSpecial()) upgradeMenu = true
+        else if (player.upgradeChoice.length) upgradeMenu = true
     }
 }
+
+const isUpgradeSpecial = () =>
+    player.level % 15 === 0 && player.specialUpgradeChoice.length
 
 const turnOffUpgradeMenu = () => {
     upgradeMenu = false
@@ -282,8 +299,10 @@ const drawUIElements = () => {
             XP_BAR_LENGTH,
             XP_BAR_HEIGHT
         )
-        const xpFillLength =
+        const xpRatioLenght =
             (player.xp * XP_BAR_LENGTH) / (player.level * NEXT_LEVEL_XP)
+        let xpFillLength =
+            xpRatioLenght > XP_BAR_LENGTH ? XP_BAR_LENGTH : xpRatioLenght
         context.fillRect(
             CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
             20,
@@ -441,6 +460,7 @@ const createNewLaser = () => {
             },
             createdPosition: { ...player.coordinates },
         })
+        handleSecondaryLasers(player)
     }
 }
 
@@ -689,6 +709,7 @@ const drawMessage = (
 
 const renderUpgradeMenu = () => {
     menuDelay++
+    const { specialUpgradeChoice, upgradeChoice } = player
     // render the background element without moving them
     if (context) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
@@ -699,28 +720,46 @@ const renderUpgradeMenu = () => {
         drawLasers()
         drawPlayer()
         drawUIElements()
-    }
 
-    drawMessage("Choose an upgrade", false, 150)
-    if (context) {
-        player.upgradeChoice.forEach((upgrade, index) => {
-            const { x, y } = upgradeBoxesPosition[index]
-            context.beginPath()
-            context.rect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
-            context.stroke()
-            context.clearRect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
-            const color =
-                menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
-                    ? "white"
-                    : "rgba(255,255,255,0.5)"
-            renderUpgradeToString(
-                player.upgradeChoice[index],
-                { x, y },
-                color,
-                context
+        renderMenu(
+            context,
+            () => drawMessage("Choose an upgrade", false, 150),
+            isUpgradeSpecial()
+                ? specialUpgradeChoice.length
+                : upgradeChoice.length
+        )
+        const color =
+            menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
+                ? "white"
+                : "rgba(255,255,255,0.5)"
+        if (isUpgradeSpecial()) {
+            renderMenu(
+                context,
+                () => drawMessage("Choose an upgrade", false, 150),
+                player.specialUpgradeChoice.length
             )
-            context.closePath()
-        })
+            specialUpgradeChoice.forEach((item, index) => {
+                const { x, y } = menuBoxesPosition[index]
+                renderSpecialUpgrade(
+                    specialUpgradeChoice[index],
+                    { x, y },
+                    color,
+                    context
+                )
+                context.closePath()
+            })
+        } else {
+            upgradeChoice.forEach((item, index) => {
+                const { x, y } = menuBoxesPosition[index]
+                renderUpgradeToString(
+                    upgradeChoice[index],
+                    { x, y },
+                    color,
+                    context
+                )
+                context.closePath()
+            })
+        }
     }
 }
 
