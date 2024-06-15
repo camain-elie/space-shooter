@@ -1,6 +1,6 @@
 import { Coordinates } from "./Vector"
 import { Particule } from "./Particules"
-import { Upgrade, initUpgrades } from "./Upgrade"
+import { Upgrade, initUpgrades } from "./Apgrade"
 import {
     CANVAS_HEIGHT,
     CANVAS_WIDTH,
@@ -40,6 +40,7 @@ interface Ship {
     upgradeChoice: Upgrade[]
     specialUpgrade: SpecialUpgrade[]
     specialUpgradeChoice: SpecialUpgrade[]
+    shieldReloadTime: number
 }
 
 const initShip = (): Ship => ({
@@ -85,6 +86,7 @@ const initShip = (): Ship => ({
     upgradeChoice: [],
     specialUpgrade: [],
     specialUpgradeChoice: [],
+    shieldReloadTime: 0,
 })
 
 export { Ship, initShip }

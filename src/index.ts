@@ -12,7 +12,7 @@ import {
     handleUpgradeClick,
     getUpgradeChoice,
     renderUpgradeToString,
-} from "./Upgrade"
+} from "./Apgrade"
 
 import {
     INVINCIBILITY_TIME,
@@ -30,6 +30,7 @@ import {
     ASTEROID_PARTICULE_MAX_SPEED,
     ASTEROID_PARTICULE_MIN_SPEED,
     REFRESH_INTERVAL,
+    SHIELD_RELOAD_TIME,
 } from "./Constants"
 import {
     Asteroid,
@@ -43,6 +44,7 @@ import {
     getSpecialUpgradesChoice,
     handleSecondaryLasers,
     handleSpecialUpgradeClick,
+    hasSpecialUpgrade,
     renderSpecialUpgrade,
 } from "./SpecialUpgrade"
 import { menuBoxesPosition, renderMenu } from "./Menu"
@@ -250,6 +252,7 @@ const handleXp = (asteroid: Asteroid) => {
     player.xp += type === 4 ? 50 : 4 - type
 
     if (player.xp > player.level * NEXT_LEVEL_XP) {
+        if (player.shieldReloadTime) player.shieldReloadTime--
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
         player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
@@ -363,6 +366,23 @@ const drawPlayer = () => {
         context?.closePath()
         context?.stroke()
 
+        if (
+            hasSpecialUpgrade(player, "shieldGenerator") &&
+            !player.shieldReloadTime
+        ) {
+            context.beginPath()
+            context.strokeStyle = "turquoise"
+            context.strokeStyle = `rgba(255,255,255, ${
+                Math.random() * 0.3 + 0.3
+            })`
+            context?.moveTo(-SHIP_LENGTH - 3, -SHIP_WIDTH / 2 - 4)
+            context?.lineTo(8, 0)
+            context?.lineTo(-SHIP_LENGTH - 3, SHIP_WIDTH / 2 + 4)
+            context?.closePath()
+            context?.stroke()
+            context.strokeStyle = "white"
+        }
+
         context.rotate(shipRotation)
         context.translate(-player.coordinates.x, -player.coordinates.y)
         if (player.lives) context.strokeStyle = "white"
@@ -404,7 +424,7 @@ const drawParticule = (particule: AsteroidParticule, length: number) => {
 const handleLasers = () => {
     calculateLasersPosition()
     createNewLaser()
-    calculateLasersColision()
+    calculateLasersCollision()
     drawLasers()
     deleteLasers()
 }
@@ -419,7 +439,7 @@ const calculateLasersPosition = () => {
     })
 }
 
-const calculateLasersColision = () => {
+const calculateLasersCollision = () => {
     player.lasers.forEach((laser, laserIndex) => {
         asteroids.forEach((asteroid, asteroidIndex) => {
             if (
@@ -677,12 +697,20 @@ const detectPlayerCollision = () => {
                     getDistance(player.leftWing, asteroidPosition) < size ||
                     getDistance(player.rightWing, asteroidPosition) < size)
             ) {
-                player.lives--
-                if (player.lives > 0) startPlayerInvincibility()
-                else {
-                    createExplosion(player.coordinates)
-                    endGame = true
-                    newGameDelay = NEW_GAME_DELAY * REFRESH_INTERVAL
+                if (
+                    hasSpecialUpgrade(player, "shieldGenerator") &&
+                    !player.shieldReloadTime
+                ) {
+                    player.shieldReloadTime = SHIELD_RELOAD_TIME
+                    startPlayerInvincibility()
+                } else {
+                    player.lives--
+                    if (player.lives > 0) startPlayerInvincibility()
+                    else {
+                        createExplosion(player.coordinates)
+                        endGame = true
+                        newGameDelay = NEW_GAME_DELAY * REFRESH_INTERVAL
+                    }
                 }
             }
         })

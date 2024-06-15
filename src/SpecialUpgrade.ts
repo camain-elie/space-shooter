@@ -3,7 +3,7 @@ import { checkClickZone, menuBoxesPosition } from "./Menu"
 import { Ship } from "./Ship"
 import { Coordinates } from "./Vector"
 
-type SpecialUpgradeId = "leftWingLaser" | "rightWingLaser"
+type SpecialUpgradeId = "leftWingLaser" | "rightWingLaser" | "shieldGenerator"
 
 interface SpecialUpgrade {
     id: SpecialUpgradeId
@@ -23,6 +23,12 @@ const specialUpgradeList: SpecialUpgrade[] = [
         name: "Additional right wing laser",
         description:
             "Add an additional laser on the right wing. The laser has the same rate and range as the main laser.",
+    },
+    {
+        id: "shieldGenerator",
+        name: "Shield generator",
+        description:
+            "Generates an energy shield around the ship, protecting it against impacts. Once hit, the shield disappears and the generator will need some time to reload.",
     },
 ]
 
@@ -72,17 +78,8 @@ const renderSpecialUpgrade = (
 }
 
 const handleSecondaryLasers = (player: Ship) => {
-    if (
-        player.specialUpgrade.filter(
-            (special) => special.id === "leftWingLaser"
-        ).length
-    )
-        createLeftWingLaser(player)
-    if (
-        player.specialUpgrade.filter(
-            (special) => special.id === "rightWingLaser"
-        ).length
-    )
+    if (hasSpecialUpgrade(player, "leftWingLaser")) createLeftWingLaser(player)
+    if (hasSpecialUpgrade(player, "rightWingLaser"))
         createRightWingLaser(player)
 }
 
@@ -118,10 +115,15 @@ const createRightWingLaser = (player: Ship) => {
     })
 }
 
+const hasSpecialUpgrade = (player: Ship, upgradeId: SpecialUpgradeId) =>
+    !!player.specialUpgrade.filter((special) => special.id === upgradeId).length
+
 export {
+    SpecialUpgradeId,
     SpecialUpgrade,
     handleSpecialUpgradeClick,
     getSpecialUpgradesChoice,
     renderSpecialUpgrade,
     handleSecondaryLasers,
+    hasSpecialUpgrade,
 }
