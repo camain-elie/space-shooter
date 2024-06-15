@@ -1,39 +1,69 @@
-// Canvas constants
-const REFRESH_INTERVAL = 30
-const CANVAS_WIDTH = 1200
-const CANVAS_HEIGHT = 720
+import { Ship, initShip } from "./Ship"
+import {
+    Coordinates,
+    changeVectorLength,
+    getDistance,
+    getPerpendicularVector,
+    inverseVector,
+} from "./Vector"
+import { AsteroidParticule, ExplosionParticule } from "./Particules"
+import {
+    initUpgrades,
+    handleUpgradeClick,
+    getUpgradeChoice,
+    renderUpgradeToString,
+} from "./Upgrade"
+
+import {
+    INVINCIBILITY_TIME,
+    LASER_SHOOTING_RATE,
+    LASER_RANGE,
+    SHIP_MAX_SPEED,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    SHIP_ACCELERATION,
+    SHIP_LENGTH,
+    SHIP_WIDTH,
+    NUMBER_OF_LIVES,
+    ASTEROID_PARTICULE_LENGTH,
+    ASTEROID_PARTICULE_MAX_RANGE,
+    ASTEROID_PARTICULE_MAX_SPEED,
+    ASTEROID_PARTICULE_MIN_SPEED,
+    REFRESH_INTERVAL,
+} from "./Constants"
+import {
+    Asteroid,
+    createGigaAsteroid,
+    destroyAsteroid,
+    drawAsteroids,
+    initAsteroids,
+    moveAsteroids,
+} from "./Asteroid"
+import {
+    getSpecialUpgradesChoice,
+    handleSecondaryLasers,
+    handleSpecialUpgradeClick,
+    renderSpecialUpgrade,
+} from "./SpecialUpgrade"
+import { menuBoxesPosition, renderMenu } from "./Menu"
+
 // Game constants
 const NEW_GAME_DELAY = 2
-const NUMBER_OF_LIVES = 3
+const MENU_CHOICE_DELAY = 1
 const XP_BAR_LENGTH = 300
 const XP_BAR_HEIGHT = 10
 const NEXT_LEVEL_XP = 30
-// Ship constants
-const SHIP_WIDTH = 10
-const SHIP_LENGTH = 20
-const SHIP_MAX_SPEED = 3
-const SHIP_ACCELERATION = 3
-const INVINCIBILITY_TIME = 3
 // Laser constants
-const LASER_SHOOTING_RATE = 2
-const LASER_SHOT_RANGE = 500
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
-// Asteroids constants
-const ASTEROID_MAX_SPEED = 100
-const ASTEROID_SIZE = 20
-const GIGA_ASTEROID_SIZE = 200
-const ASTEROID_JAGGEDNESS = 0.3
-const ASTEROID_PARTICULE_LENGTH = 2
-const ASTEROID_PARTICULE_MIN_SPEED = 50
-const ASTEROID_PARTICULE_MAX_SPEED = 200
-const ASTEROID_PARTICULE_MAX_RANGE = 100
 
 let currentInterval = 0
 let wave = 1
 let startGame = true
 let endGame = false
 let isPaused = false
+let upgradeMenu = false
+let menuDelay = 0
 let newGameDelay = 0
 let laserTicking = 0
 
@@ -47,105 +77,13 @@ let laserTicking = 0
 // Look into https://stackoverflow.com/questions/17047378/finding-coordinates-after-canvas-rotation
 // to avoid rotation and having to find coordinates
 
-interface Coordinates {
-    x: number
-    y: number
-}
-
-interface Particule {
-    position: Coordinates
-    directionVector: Coordinates
-    createdPosition: Coordinates
-}
-
-interface AsteroidParticule extends Particule {
-    range: number
-    speed: number
-}
-
-interface ExplosionParticule extends AsteroidParticule {
-    opacity: number
-    size: number
-}
-
-interface Ship {
-    coordinates: Coordinates
-    rightWing: Coordinates
-    leftWing: Coordinates
-    basePoint: Coordinates
-    relativeDirectionVector: Coordinates
-    directionVector: Coordinates
-    angle: number
-    speed: number
-    distanceToCursor: number
-    firing: boolean
-    laserRate: number
-    laserRange: number
-    lasers: Particule[]
-    invincibilityTime: number
-    lives: number
-    level: number
-    xp: number
-}
-
-type AsteroidType = 1 | 2 | 3 | 4
-
-interface Asteroid {
-    coordinates: Coordinates
-    relativeDirectionVector: Coordinates
-    rotationSpeed: number
-    angle: number
-    speed: number
-    size: number
-    type: AsteroidType
-    vertex: number
-    offset: number[]
-    health: number
-}
-
 // Game set up
 const gameCanvas =
     (document.getElementById("gameCanvas") as HTMLCanvasElement) ||
     document.createElement("canvas")
 const context = gameCanvas.getContext("2d")
 
-const player: Ship = {
-    coordinates: {
-        x: CANVAS_WIDTH / 2,
-        y: CANVAS_HEIGHT / 2,
-    },
-    leftWing: {
-        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
-        y: CANVAS_HEIGHT / 2 - SHIP_WIDTH / 2,
-    },
-    rightWing: {
-        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
-        y: CANVAS_HEIGHT / 2 + SHIP_WIDTH / 2,
-    },
-    basePoint: {
-        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
-        y: CANVAS_HEIGHT / 2,
-    },
-    relativeDirectionVector: {
-        x: CANVAS_WIDTH / 2,
-        y: CANVAS_HEIGHT / 2,
-    },
-    directionVector: {
-        x: CANVAS_WIDTH / 2,
-        y: CANVAS_HEIGHT / 2,
-    },
-    angle: 0,
-    speed: 0,
-    distanceToCursor: 0,
-    firing: false,
-    laserRate: LASER_SHOOTING_RATE,
-    laserRange: LASER_SHOT_RANGE,
-    lasers: [],
-    invincibilityTime: 0,
-    lives: NUMBER_OF_LIVES,
-    level: 1,
-    xp: 0,
-}
+const player: Ship = initShip()
 
 const cursorPosition: Coordinates = {
     ...player.coordinates,
@@ -166,6 +104,15 @@ gameCanvas.onmousemove = (ev: MouseEvent) => {
 gameCanvas.onclick = () => {
     if (startGame) startGame = false
     if (endGame && !newGameDelay) restartGame()
+    if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL) {
+        isUpgradeSpecial()
+            ? handleSpecialUpgradeClick(
+                  cursorPosition,
+                  player,
+                  turnOffUpgradeMenu
+              )
+            : handleUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
+    }
 }
 
 gameCanvas.onmousedown = () => {
@@ -182,27 +129,7 @@ window.onkeydown = (event: KeyboardEvent) => {
         isPaused = !isPaused
 }
 
-// UTILS
-const getDistance = (a: Coordinates, b: Coordinates) => {
-    const xDiff = a.x - b.x,
-        yDiff = a.y - b.y
-    return Math.hypot(xDiff, yDiff)
-}
-
-const inverseVector = (vector: Coordinates) => {
-    return { x: -vector.x, y: -vector.y }
-}
-
-const changeVectorLength = (vector: Coordinates, length: number) => {
-    const vectorLength = getDistance({ x: 0, y: 0 }, vector)
-    const vectorLengthRatio = length / vectorLength
-    return { x: vector.x * vectorLengthRatio, y: vector.y * vectorLengthRatio }
-}
-
-const getPerpendicularVector = (vector: Coordinates) => ({
-    x: vector.y,
-    y: -vector.x,
-})
+gameCanvas.oncontextmenu = (event: MouseEvent) => event.preventDefault()
 
 const restartGame = () => {
     endGame = false
@@ -213,27 +140,36 @@ const restartGame = () => {
     player.xp = 0
     player.lasers.length = 0
     player.lives = NUMBER_OF_LIVES
+    player.upgrades = initUpgrades()
     player.invincibilityTime = INVINCIBILITY_TIME
-    player.laserRange = LASER_SHOT_RANGE
+    player.laserRange = LASER_RANGE
     player.laserRate = LASER_SHOOTING_RATE
+    player.maxSpeed = SHIP_MAX_SPEED
+    player.acceleration = SHIP_ACCELERATION
 }
 
 const initWave = () => {
     if (currentInterval) wave++
 
-    initAsteroids()
-    if (wave % 3 === 0) createGigaAsteroid()
-    player.invincibilityTime = INVINCIBILITY_TIME * REFRESH_INTERVAL
+    initAsteroids(asteroids, wave)
+    if (wave % 3 === 0) createGigaAsteroid(asteroids)
+    startPlayerInvincibility()
 }
 
+const startPlayerInvincibility = () =>
+    (player.invincibilityLeft = Math.floor(
+        player.invincibilityTime * REFRESH_INTERVAL
+    ))
+
 const getAcceleration = () => {
-    if (player.distanceToCursor <= 20 && player.speed) {
+    const { distanceToCursor, speed, maxSpeed, acceleration } = player
+    if (distanceToCursor <= 20 && speed) {
         player.speed = 0
-    } else if (player.speed < SHIP_MAX_SPEED && player.distanceToCursor > 50) {
-        const newSpeed = player.speed + SHIP_ACCELERATION / REFRESH_INTERVAL
-        player.speed = newSpeed > SHIP_MAX_SPEED ? SHIP_MAX_SPEED : newSpeed
-    } else if (player.speed > 3 && player.distanceToCursor <= 50) {
-        const newSpeed = player.speed - SHIP_ACCELERATION / REFRESH_INTERVAL
+    } else if (speed < maxSpeed && distanceToCursor > 50) {
+        const newSpeed = speed + acceleration / REFRESH_INTERVAL
+        player.speed = newSpeed > maxSpeed ? maxSpeed : newSpeed
+    } else if (speed > 3 && player.distanceToCursor <= 50) {
+        const newSpeed = player.speed - acceleration / REFRESH_INTERVAL
         player.speed = newSpeed < 0 ? 1 : newSpeed
     }
 }
@@ -312,16 +248,23 @@ const getShipOrientationVector = () => {
 const handleXp = (asteroid: Asteroid) => {
     const { type } = asteroid
     player.xp += type === 4 ? 50 : 4 - type
+
     if (player.xp > player.level * NEXT_LEVEL_XP) {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
-        player.laserRange += 20
-        if (
-            player.laserRate < 29 &&
-            (player.laserRate < 10 || player.level % 3 === 0)
-        )
-            player.laserRate += 1
+        player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
+        player.upgradeChoice = getUpgradeChoice(player)
+        if (isUpgradeSpecial()) upgradeMenu = true
+        else if (player.upgradeChoice.length) upgradeMenu = true
     }
+}
+
+const isUpgradeSpecial = () =>
+    player.level % 15 === 0 && player.specialUpgradeChoice.length
+
+const turnOffUpgradeMenu = () => {
+    upgradeMenu = false
+    menuDelay = 0
 }
 
 // DRAW
@@ -356,8 +299,10 @@ const drawUIElements = () => {
             XP_BAR_LENGTH,
             XP_BAR_HEIGHT
         )
-        const xpFillLength =
+        const xpRatioLenght =
             (player.xp * XP_BAR_LENGTH) / (player.level * NEXT_LEVEL_XP)
+        let xpFillLength =
+            xpRatioLenght > XP_BAR_LENGTH ? XP_BAR_LENGTH : xpRatioLenght
         context.fillRect(
             CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
             20,
@@ -384,21 +329,27 @@ const drawShipSprite = (x: number, y: number) => {
     }
 }
 
-const drawPlayer = () => {
-    const { invincibilityTime } = player
+const handlePlayer = () => {
     if (context) {
         player.distanceToCursor = getDistance(
             cursorPosition,
             player.coordinates
         )
-        const shipRotation = getShipOrientationVector()
-        if (player.distanceToCursor > 50) player.angle = shipRotation
         getAcceleration()
         updateShipPosition()
 
-        if (invincibilityTime) {
-            context.strokeStyle = invincibilityTime
-                ? `rgba(255,255,255, ${(invincibilityTime % 6) / 10})`
+        drawPlayer()
+    }
+}
+
+const drawPlayer = () => {
+    if (context) {
+        const shipRotation = getShipOrientationVector()
+
+        const { invincibilityLeft } = player
+        if (invincibilityLeft) {
+            context.strokeStyle = invincibilityLeft
+                ? `rgba(255,255,255, ${(invincibilityLeft % 6) / 10})`
                 : "white"
         } else if (!player.lives) context.strokeStyle = "red"
         context.translate(player.coordinates.x, player.coordinates.y)
@@ -481,7 +432,12 @@ const calculateLasersColision = () => {
                     createParticules(laser.position)
                 } else {
                     handleXp(asteroid)
-                    destroyAsteroid(asteroid, asteroidIndex)
+                    destroyAsteroid(
+                        asteroids,
+                        asteroid,
+                        asteroidIndex,
+                        createParticules
+                    )
                 }
             }
         })
@@ -504,6 +460,7 @@ const createNewLaser = () => {
             },
             createdPosition: { ...player.coordinates },
         })
+        handleSecondaryLasers(player)
     }
 }
 
@@ -526,175 +483,10 @@ const deleteLasers = () => {
     })
 }
 
-const initAsteroids = () => {
-    for (let i = 0; i < wave; i++)
-        createAsteroid(
-            {
-                x: Math.random() * CANVAS_WIDTH,
-                y: Math.random() * CANVAS_HEIGHT,
-            },
-            3
-        )
-}
-
-const moveAsteroids = () => {
-    asteroids.forEach((asteroid, index) => {
-        const {
-            coordinates,
-            relativeDirectionVector,
-            rotationSpeed,
-            angle,
-            speed,
-            type,
-            size,
-        } = asteroid
-        const { x, y } = coordinates
-        const distancePerFrame = speed / REFRESH_INTERVAL
-        const vectorDistance = getDistance(
-            { x: 0, y: 0 },
-            relativeDirectionVector
-        )
-        const distanceRatio = distancePerFrame / vectorDistance
-        const newPos = {
-            x: x + relativeDirectionVector.x * distanceRatio,
-            y: y + relativeDirectionVector.y * distanceRatio,
-        }
-        if (type === 4) {
-            if (
-                newPos.x > CANVAS_WIDTH + size ||
-                newPos.x < -size ||
-                newPos.y > CANVAS_HEIGHT + size ||
-                newPos.y < -size
-            )
-                asteroids.splice(index, 1)
-        } else {
-            if (newPos.x > CANVAS_WIDTH + size)
-                newPos.x -= CANVAS_WIDTH + size * 2
-            if (newPos.x < 0 - size) newPos.x += CANVAS_WIDTH + size * 2
-            if (newPos.y > CANVAS_HEIGHT + size)
-                newPos.y -= CANVAS_HEIGHT + size * 2
-            if (newPos.y < 0 - size) newPos.y += CANVAS_HEIGHT + size * 2
-        }
-
-        asteroid.coordinates = newPos
-
-        const newAngle = angle + rotationSpeed / REFRESH_INTERVAL
-        asteroid.angle = newAngle
-    })
-}
-
-const drawAsteroids = () => {
-    if (context) {
-        asteroids.forEach((asteroid) => {
-            const { size, angle, vertex, offset } = asteroid
-            const { x, y } = asteroid.coordinates
-
-            context.strokeStyle = "white"
-            context.beginPath()
-            context.moveTo(
-                x + size * offset[0] * Math.cos(angle),
-                y + size * offset[0] * Math.sin(angle)
-            )
-
-            for (let i = 1; i < vertex; i++) {
-                context.lineTo(
-                    x +
-                        size *
-                            offset[i] *
-                            Math.cos(angle + (i * Math.PI * 2) / vertex),
-                    y +
-                        size *
-                            offset[i] *
-                            Math.sin(angle + (i * Math.PI * 2) / vertex)
-                )
-            }
-            context.closePath()
-            context.stroke()
-            // give a 3d perspective aspect to asteroids
-            context.fillStyle = "#0a132d"
-            context.fill()
-        })
-    }
-}
-
-const createGigaAsteroid = () => {
-    const top = Math.random() < 0.5
-    const left = Math.random() < 0.5
-    const size = GIGA_ASTEROID_SIZE
-
-    const asteroid: Asteroid = {
-        coordinates: {
-            x: left ? -size : CANVAS_WIDTH + size,
-            y: top ? -size : CANVAS_HEIGHT + size,
-        },
-        relativeDirectionVector: {
-            x: left ? CANVAS_WIDTH : -CANVAS_WIDTH,
-            y: top ? CANVAS_HEIGHT : -CANVAS_HEIGHT,
-        },
-        rotationSpeed: Math.random() > 0.5 ? -1 : 1,
-        angle: 0,
-        speed: 100,
-        size,
-        type: 4,
-        vertex: 20,
-        offset: [],
-        health: 50,
-    }
-
-    for (let i = 0; i < asteroid.vertex; i++) {
-        asteroid.offset.push(Math.random() * 0.1 * 2 + 1 - 0.1)
-    }
-
-    asteroids.push(asteroid)
-}
-
-const createAsteroid = (coordinates: Coordinates, type: AsteroidType) => {
-    const size = type * ASTEROID_SIZE
-    const asteroid: Asteroid = {
-        coordinates,
-        relativeDirectionVector: {
-            x: Math.random() * (20 + 20) - 20,
-            y: Math.random() * (20 + 20) - 20,
-        },
-        rotationSpeed: Math.random() * 4 - 2,
-        angle: 0,
-        speed: Math.random() * ASTEROID_MAX_SPEED,
-        size,
-        type,
-        vertex: Math.random() * (12 - 6) + 6,
-        offset: [],
-        health: 1,
-    }
-
-    for (let i = 0; i < asteroid.vertex; i++) {
-        asteroid.offset.push(
-            Math.random() * ASTEROID_JAGGEDNESS * 2 + 1 - ASTEROID_JAGGEDNESS
-        )
-    }
-
-    asteroids.push(asteroid)
-}
-
-const destroyAsteroid = (asteroid: Asteroid, index: number) => {
-    const { coordinates, type } = asteroid
-    createParticules(coordinates)
-
-    asteroids.splice(index, 1)
-    if (type === 4) {
-        for (let i = 0; i < 4; i++) {
-            createAsteroid(coordinates, (type - 1) as AsteroidType)
-        }
-    } else if (type !== 1) {
-        for (let i = 0; i < 5 - asteroid.type; i++) {
-            createAsteroid(coordinates, (type - 1) as AsteroidType)
-        }
-    }
-}
-
 const handleAsteroids = () => {
-    if (asteroids.length) {
-        moveAsteroids()
-        drawAsteroids()
+    if (asteroids.length && context) {
+        moveAsteroids(asteroids)
+        drawAsteroids(context, asteroids)
     } else initWave()
 }
 
@@ -782,7 +574,6 @@ const moveExplosionParticules = () => {
             calculateParticulePosition(particule)
         particule.position = { ...newParticulePos }
     })
-    if (explosionParticules.length) console.log(explosionParticules[0])
 }
 
 const drawExplosionParticules = () => {
@@ -873,23 +664,21 @@ const createBackground = () => {
 }
 
 const detectPlayerCollision = () => {
-    const { coordinates, invincibilityTime } = player
+    const { coordinates, invincibilityLeft } = player
     if (!player.lives) return
 
-    if (invincibilityTime) player.invincibilityTime--
+    if (invincibilityLeft) player.invincibilityLeft--
     else {
         asteroids.forEach((asteroid) => {
             const { size, coordinates: asteroidPosition } = asteroid
             if (
-                !player.invincibilityTime &&
+                !player.invincibilityLeft &&
                 (getDistance(coordinates, asteroidPosition) < size ||
                     getDistance(player.leftWing, asteroidPosition) < size ||
                     getDistance(player.rightWing, asteroidPosition) < size)
             ) {
                 player.lives--
-                if (player.lives > 0)
-                    player.invincibilityTime =
-                        INVINCIBILITY_TIME * REFRESH_INTERVAL
+                if (player.lives > 0) startPlayerInvincibility()
                 else {
                     createExplosion(player.coordinates)
                     endGame = true
@@ -918,8 +707,64 @@ const drawMessage = (
     }
 }
 
+const renderUpgradeMenu = () => {
+    menuDelay++
+    const { specialUpgradeChoice, upgradeChoice } = player
+    // render the background element without moving them
+    if (context) {
+        context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
+        drawAsteroidParticules()
+        drawAsteroids(context, asteroids)
+        drawBackgroundParticules()
+        drawExplosionParticules()
+        drawLasers()
+        drawPlayer()
+        drawUIElements()
+
+        renderMenu(
+            context,
+            () => drawMessage("Choose an upgrade", false, 150),
+            isUpgradeSpecial()
+                ? specialUpgradeChoice.length
+                : upgradeChoice.length
+        )
+        const color =
+            menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
+                ? "white"
+                : "rgba(255,255,255,0.5)"
+        if (isUpgradeSpecial()) {
+            renderMenu(
+                context,
+                () => drawMessage("Choose an upgrade", false, 150),
+                player.specialUpgradeChoice.length
+            )
+            specialUpgradeChoice.forEach((item, index) => {
+                const { x, y } = menuBoxesPosition[index]
+                renderSpecialUpgrade(
+                    specialUpgradeChoice[index],
+                    { x, y },
+                    color,
+                    context
+                )
+                context.closePath()
+            })
+        } else {
+            upgradeChoice.forEach((item, index) => {
+                const { x, y } = menuBoxesPosition[index]
+                renderUpgradeToString(
+                    upgradeChoice[index],
+                    { x, y },
+                    color,
+                    context
+                )
+                context.closePath()
+            })
+        }
+    }
+}
+
 const draw = () => {
-    if (!isPaused) {
+    if (!isPaused && !upgradeMenu) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
         handleBackground()
         handleAsteroids()
@@ -927,7 +772,7 @@ const draw = () => {
         handleExplosions()
         drawUIElements()
         if (!endGame && !startGame) {
-            drawPlayer()
+            handlePlayer()
             handleLasers()
             detectPlayerCollision()
         } else {
@@ -947,9 +792,12 @@ const draw = () => {
 
         currentInterval++
         if (player.firing) laserTicking++
-    } else {
+    } else if (isPaused) {
         drawMessage("Game paused")
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
+    } else {
+        renderUpgradeMenu()
+        drawUIElements()
     }
 }
 
