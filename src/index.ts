@@ -97,11 +97,20 @@ const backgroundParticules: ExplosionParticule[] = []
 const explosionParticules: ExplosionParticule[] = []
 
 // PLAYER MOVEMENTS
-gameCanvas.onmousemove = (ev: MouseEvent) => {
+const handleCursorMove = (ev: MouseEvent | TouchEvent) => {
     const rect = gameCanvas.getBoundingClientRect()
-    cursorPosition.x = ev.clientX - rect.left
-    cursorPosition.y = ev.clientY - rect.top
+    let clientX, clientY
+    if (ev instanceof MouseEvent) {
+        ;({ clientX, clientY } = ev)
+    } else {
+        const touch = ev.touches[0]
+        ;({ clientX, clientY } = touch)
+    }
+    cursorPosition.x = clientX - rect.left
+    cursorPosition.y = clientY - rect.top
 }
+gameCanvas.onmousemove = handleCursorMove
+gameCanvas.ontouchmove = handleCursorMove
 
 gameCanvas.onclick = () => {
     if (startGame) startGame = false
@@ -117,14 +126,16 @@ gameCanvas.onclick = () => {
     }
 }
 
-gameCanvas.onmousedown = () => {
-    player.firing = true
-}
+const startFiring = () => (player.firing = true)
+gameCanvas.onmousedown = startFiring
+gameCanvas.ontouchstart = startFiring
 
-gameCanvas.onmouseup = () => {
+const stopFiring = () => {
     player.firing = false
     laserTicking = 0
 }
+gameCanvas.onmouseup = stopFiring
+gameCanvas.ontouchend = stopFiring
 
 window.onkeydown = (event: KeyboardEvent) => {
     if (event.key.toLocaleLowerCase() === "p" && !startGame && !endGame)
