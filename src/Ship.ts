@@ -19,6 +19,8 @@ interface Ship {
     coordinates: Coordinates
     rightWing: Coordinates
     leftWing: Coordinates
+    rightLaser: Coordinates
+    leftLaser: Coordinates
     basePoint: Coordinates
     relativeDirectionVector: Coordinates
     directionVector: Coordinates
@@ -55,6 +57,14 @@ const initShip = (): Ship => ({
     rightWing: {
         x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
         y: CANVAS_HEIGHT / 2 + SHIP_WIDTH / 2,
+    },
+    rightLaser: {
+        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
+        y: CANVAS_HEIGHT / 2 + SHIP_WIDTH / 2 + 1,
+    },
+    leftLaser: {
+        x: CANVAS_WIDTH / 2 - SHIP_LENGTH,
+        y: CANVAS_HEIGHT / 2 - SHIP_WIDTH / 2 - 1,
     },
     basePoint: {
         x: CANVAS_WIDTH / 2 - SHIP_LENGTH,

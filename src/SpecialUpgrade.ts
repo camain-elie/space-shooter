@@ -86,32 +86,32 @@ const handleSecondaryLasers = (player: Ship) => {
 const createLeftWingLaser = (player: Ship) => {
     const laserDirectionRatio = player.laserRange / player.distanceToCursor
     player.lasers.push({
-        position: { ...player.leftWing },
+        position: { ...player.leftLaser },
         directionVector: {
             x:
-                (player.directionVector.x - player.leftWing.x) *
+                (player.directionVector.x - player.leftLaser.x) *
                 laserDirectionRatio,
             y:
-                (player.directionVector.y - player.leftWing.y) *
+                (player.directionVector.y - player.leftLaser.y) *
                 laserDirectionRatio,
         },
-        createdPosition: { ...player.leftWing },
+        createdPosition: { ...player.leftLaser },
     })
 }
 
 const createRightWingLaser = (player: Ship) => {
     const laserDirectionRatio = player.laserRange / player.distanceToCursor
     player.lasers.push({
-        position: { ...player.rightWing },
+        position: { ...player.rightLaser },
         directionVector: {
             x:
-                (player.directionVector.x - player.rightWing.x) *
+                (player.directionVector.x - player.rightLaser.x) *
                 laserDirectionRatio,
             y:
-                (player.directionVector.y - player.rightWing.y) *
+                (player.directionVector.y - player.rightLaser.y) *
                 laserDirectionRatio,
         },
-        createdPosition: { ...player.rightWing },
+        createdPosition: { ...player.rightLaser },
     })
 }
 

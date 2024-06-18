@@ -54,7 +54,7 @@ const NEW_GAME_DELAY = 2
 const MENU_CHOICE_DELAY = 1
 const XP_BAR_LENGTH = 300
 const XP_BAR_HEIGHT = 10
-const NEXT_LEVEL_XP = 30
+const NEXT_LEVEL_XP = 1
 // Laser constants
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
@@ -220,19 +220,35 @@ const updateWingsPosition = () => {
     }
 
     // from the base point we find the wings positions
-    const perpendicularVector = changeVectorLength(
-        getPerpendicularVector(baseToNoseVector),
+    const perpendicularVector = getPerpendicularVector(baseToNoseVector)
+
+    const leftWingVector = changeVectorLength(
+        perpendicularVector,
         SHIP_WIDTH / 2
     )
-    const inversePerpendicularVector = inverseVector(perpendicularVector)
+    const rightWingVector = inverseVector(leftWingVector)
+    const leftLaserVector = changeVectorLength(
+        perpendicularVector,
+        SHIP_WIDTH / 2 - 1
+    )
+    const rightLaserVector = inverseVector(leftLaserVector)
+    // const inversePerpendicularVector = inverseVector(perpendicularVector)
 
     player.leftWing = {
-        x: basePoint.x + perpendicularVector.x,
-        y: basePoint.y + perpendicularVector.y,
+        x: basePoint.x + leftWingVector.x,
+        y: basePoint.y + leftWingVector.y,
     }
     player.rightWing = {
-        x: basePoint.x + inversePerpendicularVector.x,
-        y: basePoint.y + inversePerpendicularVector.y,
+        x: basePoint.x + rightWingVector.x,
+        y: basePoint.y + rightWingVector.y,
+    }
+    player.leftLaser = {
+        x: basePoint.x + leftLaserVector.x,
+        y: basePoint.y + leftLaserVector.y,
+    }
+    player.rightLaser = {
+        x: basePoint.x + rightLaserVector.x,
+        y: basePoint.y + rightLaserVector.y,
     }
     player.basePoint = { ...basePoint }
 }
