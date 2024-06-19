@@ -220,19 +220,34 @@ const updateWingsPosition = () => {
     }
 
     // from the base point we find the wings positions
-    const perpendicularVector = changeVectorLength(
-        getPerpendicularVector(baseToNoseVector),
+    const perpendicularVector = getPerpendicularVector(baseToNoseVector)
+
+    const leftWingVector = changeVectorLength(
+        perpendicularVector,
         SHIP_WIDTH / 2
     )
-    const inversePerpendicularVector = inverseVector(perpendicularVector)
+    const rightWingVector = inverseVector(leftWingVector)
+    const leftLaserVector = changeVectorLength(
+        perpendicularVector,
+        SHIP_WIDTH / 2 - 1
+    )
+    const rightLaserVector = inverseVector(leftLaserVector)
 
     player.leftWing = {
-        x: basePoint.x + perpendicularVector.x,
-        y: basePoint.y + perpendicularVector.y,
+        x: basePoint.x + leftWingVector.x,
+        y: basePoint.y + leftWingVector.y,
     }
     player.rightWing = {
-        x: basePoint.x + inversePerpendicularVector.x,
-        y: basePoint.y + inversePerpendicularVector.y,
+        x: basePoint.x + rightWingVector.x,
+        y: basePoint.y + rightWingVector.y,
+    }
+    player.leftLaser = {
+        x: basePoint.x + leftLaserVector.x,
+        y: basePoint.y + leftLaserVector.y,
+    }
+    player.rightLaser = {
+        x: basePoint.x + rightLaserVector.x,
+        y: basePoint.y + rightLaserVector.y,
     }
     player.basePoint = { ...basePoint }
 }
