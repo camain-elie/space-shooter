@@ -33,14 +33,7 @@ import {
     REFRESH_INTERVAL,
     SHIELD_RELOAD_TIME,
 } from "./Constants"
-import {
-    Asteroid,
-    createGigaAsteroid,
-    destroyAsteroid,
-    drawAsteroids,
-    initAsteroids,
-    moveAsteroids,
-} from "./Asteroid"
+import { Asteroid } from "./Asteroid"
 import {
     getSpecialUpgradesChoice,
     handleSecondaryLasers,
@@ -49,6 +42,7 @@ import {
     renderSpecialUpgrade,
 } from "./SpecialUpgrade"
 import { menuBoxesPosition, renderMenu } from "./Menu"
+import { AsteroidBelt } from "./AsteroidBelt"
 
 // Game constants
 const NEW_GAME_DELAY = 2
@@ -92,7 +86,7 @@ const cursorPosition: Coordinates = {
     ...player.coordinates,
 }
 
-const asteroids: Asteroid[] = []
+const asteroids: AsteroidBelt = new AsteroidBelt()
 const asteroidParticules: AsteroidParticule[] = []
 const backgroundParticules: ExplosionParticule[] = []
 const explosionParticules: ExplosionParticule[] = []
@@ -153,7 +147,7 @@ gameCanvas.oncontextmenu = (event: MouseEvent) => event.preventDefault()
 const restartGame = () => {
     endGame = false
     wave = 0
-    asteroids.length = 0
+    asteroids.reset()
     resetTimer()
     startTimer()
 
@@ -172,8 +166,7 @@ const restartGame = () => {
 const initWave = () => {
     if (currentInterval) wave++
 
-    initAsteroids(asteroids, wave)
-    if (wave % 3 === 0) createGigaAsteroid(asteroids)
+    asteroids.init(wave)
     startPlayerInvincibility()
 }
 
@@ -316,7 +309,7 @@ const drawUIElements = () => {
         context.fillText(`Wave ${wave}`, 20, 25)
 
         // draw the number of remaining asteroids
-        context.fillText(`Remaining : ${asteroids.length}`, 20, 45)
+        context.fillText(`Remaining : ${asteroids.getNumber()}`, 20, 45)
 
         // draw the cursor
         context.fillRect(x, y, 1, 1)
@@ -479,7 +472,7 @@ const calculateLasersPosition = () => {
 
 const calculateLasersCollision = () => {
     player.lasers.forEach((laser, laserIndex) => {
-        asteroids.forEach((asteroid, asteroidIndex) => {
+        asteroids.getBelt().forEach((asteroid, asteroidIndex) => {
             if (
                 getDistance(laser.position, asteroid.coordinates) <
                 asteroid.size
@@ -490,12 +483,7 @@ const calculateLasersCollision = () => {
                     createParticules(laser.position)
                 } else {
                     handleXp(asteroid)
-                    destroyAsteroid(
-                        asteroids,
-                        asteroid,
-                        asteroidIndex,
-                        createParticules
-                    )
+                    asteroids.destroyAsteroid(asteroidIndex, createParticules)
                 }
             }
         })
@@ -542,9 +530,9 @@ const deleteLasers = () => {
 }
 
 const handleAsteroids = () => {
-    if (asteroids.length && context) {
-        moveAsteroids(asteroids)
-        drawAsteroids(context, asteroids)
+    if (asteroids.getNumber() && context) {
+        asteroids.update()
+        asteroids.draw(context)
     } else initWave()
 }
 
@@ -727,7 +715,7 @@ const detectPlayerCollision = () => {
 
     if (invincibilityLeft) player.invincibilityLeft--
     else {
-        asteroids.forEach((asteroid) => {
+        asteroids.getBelt().forEach((asteroid) => {
             const { size, coordinates: asteroidPosition } = asteroid
             if (
                 !player.invincibilityLeft &&
@@ -781,7 +769,7 @@ const renderUpgradeMenu = () => {
     if (context) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
         drawAsteroidParticules()
-        drawAsteroids(context, asteroids)
+        asteroids.draw(context)
         drawBackgroundParticules()
         drawExplosionParticules()
         drawLasers()
