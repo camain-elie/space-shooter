@@ -13,6 +13,7 @@ import {
     getUpgradeChoice,
     renderUpgradeToString,
 } from "./Apgrade"
+import { timeString, startTimer, stopTimer, resetTimer } from "./Timer"
 
 import {
     INVINCIBILITY_TIME,
@@ -113,7 +114,10 @@ gameCanvas.onmousemove = handleCursorMove
 gameCanvas.ontouchmove = handleCursorMove
 
 gameCanvas.onclick = () => {
-    if (startGame) startGame = false
+    if (startGame) {
+        startTimer()
+        startGame = false
+    }
     if (endGame && !newGameDelay) restartGame()
     if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL) {
         isUpgradeSpecial()
@@ -138,8 +142,10 @@ gameCanvas.onmouseup = stopFiring
 gameCanvas.ontouchend = stopFiring
 
 window.onkeydown = (event: KeyboardEvent) => {
-    if (event.key.toLocaleLowerCase() === "p" && !startGame && !endGame)
+    if (event.key.toLocaleLowerCase() === "p" && !startGame && !endGame) {
+        isPaused ? startTimer() : stopTimer()
         isPaused = !isPaused
+    }
 }
 
 gameCanvas.oncontextmenu = (event: MouseEvent) => event.preventDefault()
@@ -148,6 +154,8 @@ const restartGame = () => {
     endGame = false
     wave = 0
     asteroids.length = 0
+    resetTimer()
+    startTimer()
 
     player.level = 1
     player.xp = 0
@@ -220,19 +228,34 @@ const updateWingsPosition = () => {
     }
 
     // from the base point we find the wings positions
-    const perpendicularVector = changeVectorLength(
-        getPerpendicularVector(baseToNoseVector),
+    const perpendicularVector = getPerpendicularVector(baseToNoseVector)
+
+    const leftWingVector = changeVectorLength(
+        perpendicularVector,
         SHIP_WIDTH / 2
     )
-    const inversePerpendicularVector = inverseVector(perpendicularVector)
+    const rightWingVector = inverseVector(leftWingVector)
+    const leftLaserVector = changeVectorLength(
+        perpendicularVector,
+        SHIP_WIDTH / 2 - 1
+    )
+    const rightLaserVector = inverseVector(leftLaserVector)
 
     player.leftWing = {
-        x: basePoint.x + perpendicularVector.x,
-        y: basePoint.y + perpendicularVector.y,
+        x: basePoint.x + leftWingVector.x,
+        y: basePoint.y + leftWingVector.y,
     }
     player.rightWing = {
-        x: basePoint.x + inversePerpendicularVector.x,
-        y: basePoint.y + inversePerpendicularVector.y,
+        x: basePoint.x + rightWingVector.x,
+        y: basePoint.y + rightWingVector.y,
+    }
+    player.leftLaser = {
+        x: basePoint.x + leftLaserVector.x,
+        y: basePoint.y + leftLaserVector.y,
+    }
+    player.rightLaser = {
+        x: basePoint.x + rightLaserVector.x,
+        y: basePoint.y + rightLaserVector.y,
     }
     player.basePoint = { ...basePoint }
 }
@@ -329,6 +352,10 @@ const drawUIElements = () => {
             CANVAS_WIDTH / 2,
             40 + XP_BAR_HEIGHT
         )
+
+        // draw the timer
+        context.textAlign = "left"
+        context.fillText(`${timeString}`, 20, CANVAS_HEIGHT - 20)
     }
 }
 
@@ -720,6 +747,7 @@ const detectPlayerCollision = () => {
                     else {
                         createExplosion(player.coordinates)
                         endGame = true
+                        stopTimer()
                         newGameDelay = NEW_GAME_DELAY * REFRESH_INTERVAL
                     }
                 }
