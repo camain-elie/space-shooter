@@ -1,5 +1,10 @@
-import { MENU_UPGRADE_WIDTH } from "./Constants"
+import {
+    LASER_SHOT_LENGTH,
+    LASER_SHOT_SPEED,
+    MENU_UPGRADE_WIDTH,
+} from "./Constants"
 import { checkClickZone, menuBoxesPosition } from "./Menu"
+import { LinearParticule } from "./Particules"
 import { Ship } from "./Ship"
 import { Coordinates } from "./Vector"
 
@@ -85,34 +90,42 @@ const handleSecondaryLasers = (player: Ship) => {
 
 const createLeftWingLaser = (player: Ship) => {
     const laserDirectionRatio = player.laserRange / player.distanceToCursor
-    player.lasers.push({
-        position: { ...player.leftLaser },
-        directionVector: {
-            x:
-                (player.directionVector.x - player.leftLaser.x) *
-                laserDirectionRatio,
-            y:
-                (player.directionVector.y - player.leftLaser.y) *
-                laserDirectionRatio,
-        },
-        createdPosition: { ...player.leftLaser },
-    })
+    player.lasers.push(
+        new LinearParticule(
+            { ...player.leftLaser },
+            {
+                x:
+                    (player.directionVector.x - player.leftLaser.x) *
+                    laserDirectionRatio,
+                y:
+                    (player.directionVector.y - player.leftLaser.y) *
+                    laserDirectionRatio,
+            },
+            player.laserRange,
+            LASER_SHOT_SPEED,
+            LASER_SHOT_LENGTH
+        )
+    )
 }
 
 const createRightWingLaser = (player: Ship) => {
     const laserDirectionRatio = player.laserRange / player.distanceToCursor
-    player.lasers.push({
-        position: { ...player.rightLaser },
-        directionVector: {
-            x:
-                (player.directionVector.x - player.rightLaser.x) *
-                laserDirectionRatio,
-            y:
-                (player.directionVector.y - player.rightLaser.y) *
-                laserDirectionRatio,
-        },
-        createdPosition: { ...player.rightLaser },
-    })
+    player.lasers.push(
+        new LinearParticule(
+            { ...player.rightLaser },
+            {
+                x:
+                    (player.directionVector.x - player.rightLaser.x) *
+                    laserDirectionRatio,
+                y:
+                    (player.directionVector.y - player.rightLaser.y) *
+                    laserDirectionRatio,
+            },
+            player.laserRange,
+            LASER_SHOT_SPEED,
+            LASER_SHOT_LENGTH
+        )
+    )
 }
 
 const hasSpecialUpgrade = (player: Ship, upgradeId: SpecialUpgradeId) =>
