@@ -1,11 +1,11 @@
 import { Ship } from "./Ship"
 import { Coordinates, getDistance } from "./Vector"
-import { CircularParticule, LinearParticule } from "./Particules"
+import { BackgroundParticule, LinearParticule } from "./Particules"
 import {
     handleUpgradeClick,
     getUpgradeChoice,
     renderUpgradeToString,
-} from "./Apgrade"
+} from "./Upgrade"
 import { timeString, startTimer, stopTimer, resetTimer } from "./Timer"
 
 import {
@@ -14,9 +14,6 @@ import {
     SHIP_LENGTH,
     SHIP_WIDTH,
     ASTEROID_PARTICULE_LENGTH,
-    ASTEROID_PARTICULE_MAX_RANGE,
-    ASTEROID_PARTICULE_MAX_SPEED,
-    ASTEROID_PARTICULE_MIN_SPEED,
     REFRESH_INTERVAL,
     SHIELD_RELOAD_TIME,
     LASER_SHOT_LENGTH,
@@ -32,6 +29,7 @@ import {
 } from "./SpecialUpgrade"
 import { menuBoxesPosition, renderMenu } from "./Menu"
 import { AsteroidBelt } from "./AsteroidBelt"
+import { ParticuleCollection } from "./ParticuleCollection"
 
 // Game constants
 const NEW_GAME_DELAY = 2
@@ -73,9 +71,9 @@ const cursorPosition: Coordinates = {
 }
 
 const asteroids: AsteroidBelt = new AsteroidBelt()
-const asteroidParticules: LinearParticule[] = []
-const backgroundParticules: CircularParticule[] = []
-const explosionParticules: CircularParticule[] = []
+const asteroidParticules = new ParticuleCollection()
+const backgroundParticules = new ParticuleCollection()
+const explosionParticules = new ParticuleCollection()
 
 // PLAYER MOVEMENTS
 const handleCursorMove = (ev: MouseEvent | TouchEvent) => {
@@ -245,25 +243,20 @@ const handlePlayer = () => {
 }
 
 const handleLasers = () => {
-    calculateLasersPosition()
+    player.lasers.update()
     createNewLaser()
     calculateLasersCollision()
-    drawLasers()
-    deleteLasers()
-}
-
-const calculateLasersPosition = () => {
-    player.lasers.forEach((laser) => laser.update())
+    if (context) player.lasers.draw(context)
 }
 
 const calculateLasersCollision = () => {
-    player.lasers.forEach((laser, laserIndex) => {
+    player.lasers.collection.forEach((laser, laserIndex) => {
         asteroids.getBelt().forEach((asteroid, asteroidIndex) => {
             if (
                 getDistance(laser.position, asteroid.coordinates) <
                 asteroid.size
             ) {
-                player.lasers.splice(laserIndex, 1)
+                player.lasers.collection.splice(laserIndex, 1)
                 if (asteroid.health > 1) {
                     asteroid.health--
                     createParticules(laser.position)
@@ -280,7 +273,7 @@ const createNewLaser = () => {
     const firingInterval = Math.floor(REFRESH_INTERVAL / player.laserRate)
     if (player.firing && laserTicking % firingInterval === 0) {
         const laserDirectionRatio = player.laserRange / player.distanceToCursor
-        player.lasers.push(
+        player.lasers.addParticule(
             new LinearParticule(
                 { ...player.coordinates },
                 {
@@ -300,22 +293,6 @@ const createNewLaser = () => {
     }
 }
 
-const drawLasers = () => {
-    player.lasers.forEach((laser) => {
-        if (context) laser.draw(context)
-    })
-}
-
-const deleteLasers = () => {
-    player.lasers.forEach((laser, index) => {
-        if (
-            getDistance(laser.createdPosition, laser.position) >
-            player.laserRange
-        )
-            player.lasers.splice(index, 1)
-    })
-}
-
 const handleAsteroids = () => {
     if (asteroids.getNumber() && context) {
         asteroids.update()
@@ -324,134 +301,32 @@ const handleAsteroids = () => {
 }
 
 const handleAsteroidParticules = () => {
-    calculateAsteroidParticulesPosition()
-    drawAsteroidParticules()
-    deleteParticules(asteroidParticules)
+    asteroidParticules.update()
+    if (context) asteroidParticules.draw(context)
 }
 
-const calculateAsteroidParticulesPosition = () => {
-    asteroidParticules.forEach((particule) => particule.update())
-}
-
-const createParticules = (position: Coordinates, particuleNumber = 10) => {
-    for (let i = 0; i < particuleNumber; i++) {
-        asteroidParticules.push(
-            new LinearParticule(
-                position,
-                {
-                    x: Math.random() * (10 + 10) - 10,
-                    y: Math.random() * 20 - 10,
-                },
-                Math.random() * ASTEROID_PARTICULE_MAX_RANGE,
-
-                Math.random() *
-                    (ASTEROID_PARTICULE_MAX_SPEED -
-                        ASTEROID_PARTICULE_MIN_SPEED) +
-                    ASTEROID_PARTICULE_MIN_SPEED,
-                ASTEROID_PARTICULE_LENGTH
-            )
-        )
-    }
-}
-
-const drawAsteroidParticules = () => {
-    asteroidParticules.forEach((particule) => {
-        if (context) particule.draw(context)
-    })
-}
-
-const deleteParticules = (
-    particuleArray: (LinearParticule | CircularParticule)[]
-) => {
-    particuleArray.forEach((particule, index) => {
-        if (
-            getDistance(particule.createdPosition, particule.position) >
-            particule.range
-        )
-            particuleArray.splice(index, 1)
-    })
+const createParticules = (position: Coordinates, number = 10) => {
+    asteroidParticules.addRandomParticules(
+        number,
+        "linear",
+        position,
+        ASTEROID_PARTICULE_LENGTH
+    )
 }
 
 const createExplosion = (position: Coordinates) => {
     createParticules(position, 50)
-
-    for (let i = 0; i < 30; i++) {
-        explosionParticules.push(
-            new CircularParticule(
-                position,
-                {
-                    x: Math.random() * (10 + 10) - 10,
-                    y: Math.random() * 20 - 10,
-                },
-                Math.random() * ASTEROID_PARTICULE_MAX_RANGE,
-
-                Math.random() *
-                    (ASTEROID_PARTICULE_MAX_SPEED -
-                        ASTEROID_PARTICULE_MIN_SPEED) +
-                    ASTEROID_PARTICULE_MIN_SPEED,
-
-                Math.random() * 0.8,
-                Math.random() * 2 + 2
-            )
-        )
-    }
+    explosionParticules.addRandomParticules(30, "circular", position, 2, 0.8)
 }
 
 const handleExplosions = () => {
-    moveExplosionParticules()
-    deleteParticules(explosionParticules)
-    drawExplosionParticules()
-}
-
-const moveExplosionParticules = () => {
-    explosionParticules.forEach((particule) => particule.update())
-}
-
-const drawExplosionParticules = () => {
-    if (context) {
-        explosionParticules.forEach((particule) => {
-            particule.draw(context)
-        })
-    }
+    explosionParticules.update()
+    if (context) explosionParticules.draw(context)
 }
 
 const handleBackground = () => {
-    moveBackgroundParticules()
-    drawBackgroundParticules()
-}
-
-const moveBackgroundParticules = () => {
-    backgroundParticules.forEach((particule) => {
-        const {
-            position: { x, y },
-            speed,
-            size,
-        } = particule
-        const { relativeDirectionVector: directionVector, speed: playerSpeed } =
-            player
-
-        const distancePerFrame = (speed * playerSpeed) / REFRESH_INTERVAL
-        const vectorDistance = getDistance({ x: 0, y: 0 }, directionVector)
-        const distanceRatio = distancePerFrame / vectorDistance
-        const newPos = {
-            x: x + directionVector.x * distanceRatio,
-            y: y + directionVector.y * distanceRatio,
-        }
-
-        if (newPos.x > CANVAS_WIDTH + size) newPos.x -= CANVAS_WIDTH + size * 2
-        if (newPos.x < 0 - size) newPos.x += CANVAS_WIDTH + size * 2
-        if (newPos.y > CANVAS_HEIGHT + size)
-            newPos.y -= CANVAS_HEIGHT + size * 2
-        if (newPos.y < 0 - size) newPos.y += CANVAS_HEIGHT + size * 2
-
-        particule.position = newPos
-    })
-}
-
-const drawBackgroundParticules = () => {
-    if (context) {
-        backgroundParticules.forEach((particule) => particule.draw(context))
-    }
+    backgroundParticules.update()
+    if (context) backgroundParticules.draw(context)
 }
 
 const createBackground = () => {
@@ -460,16 +335,17 @@ const createBackground = () => {
             x: Math.random() * CANVAS_WIDTH,
             y: Math.random() * CANVAS_HEIGHT,
         }
-        const backgroundLevel = Math.random()
-        const particule = new CircularParticule(
+        const perspectiveRatio = Math.random()
+        const particule = new BackgroundParticule(
             position,
             { x: 0, y: 0 },
-            0,
-            backgroundLevel * 8 + 1,
-            backgroundLevel,
-            backgroundLevel * 1 + 0.5
+            Number.POSITIVE_INFINITY,
+            perspectiveRatio * 8 + 1,
+            perspectiveRatio * 1 + 0.5,
+            perspectiveRatio,
+            player
         )
-        backgroundParticules.push(particule)
+        backgroundParticules.addParticule(particule)
     }
 }
 
@@ -532,11 +408,11 @@ const renderUpgradeMenu = () => {
     // render the background element without moving them
     if (context) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
-        drawAsteroidParticules()
+        asteroidParticules.draw(context)
         asteroids.draw(context)
-        drawBackgroundParticules()
-        drawExplosionParticules()
-        drawLasers()
+        backgroundParticules.draw(context)
+        explosionParticules.draw(context)
+        player.lasers.draw(context)
         player.draw(context, cursorPosition)
         drawUIElements()
 

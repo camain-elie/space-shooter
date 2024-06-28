@@ -1,4 +1,5 @@
-import { REFRESH_INTERVAL } from "./Constants"
+import { CANVAS_HEIGHT, CANVAS_WIDTH, REFRESH_INTERVAL } from "./Constants"
+import { Ship } from "./Ship"
 import { Coordinates, getDistance } from "./Vector"
 
 class Particule {
@@ -54,20 +55,17 @@ class LinearParticule extends Particule {
 
 class CircularParticule extends Particule {
     opacity: number
-    size: number
 
     constructor(
         createdPosition: Coordinates,
         directionVector: Coordinates,
         range: number,
         speed: number,
-        opacity: number,
-        size: number
+        size: number,
+        opacity: number
     ) {
         super(createdPosition, directionVector, range, speed, size)
-
         this.opacity = opacity
-        this.size = size
     }
 
     draw(context: CanvasRenderingContext2D) {
@@ -84,4 +82,46 @@ class CircularParticule extends Particule {
     }
 }
 
-export { Particule, LinearParticule, CircularParticule }
+class BackgroundParticule extends CircularParticule {
+    player: Ship
+
+    constructor(
+        createdPosition: Coordinates,
+        directionVector: Coordinates,
+        range: number,
+        speed: number,
+        size: number,
+        opacity: number,
+        player: Ship
+    ) {
+        super(createdPosition, directionVector, range, speed, size, opacity)
+        this.player = player
+    }
+    update() {
+        const {
+            position: { x, y },
+            speed,
+            size,
+        } = this
+        const { relativeDirectionVector: directionVector, speed: playerSpeed } =
+            this.player
+
+        const distancePerFrame = (speed * playerSpeed) / REFRESH_INTERVAL
+        const vectorDistance = getDistance({ x: 0, y: 0 }, directionVector)
+        const distanceRatio = distancePerFrame / vectorDistance
+        const newPos = {
+            x: x + directionVector.x * distanceRatio,
+            y: y + directionVector.y * distanceRatio,
+        }
+
+        if (newPos.x > CANVAS_WIDTH + size) newPos.x -= CANVAS_WIDTH + size * 2
+        if (newPos.x < 0 - size) newPos.x += CANVAS_WIDTH + size * 2
+        if (newPos.y > CANVAS_HEIGHT + size)
+            newPos.y -= CANVAS_HEIGHT + size * 2
+        if (newPos.y < 0 - size) newPos.y += CANVAS_HEIGHT + size * 2
+
+        this.position = newPos
+    }
+}
+
+export { Particule, LinearParticule, CircularParticule, BackgroundParticule }

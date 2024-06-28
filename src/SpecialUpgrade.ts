@@ -90,7 +90,7 @@ const handleSecondaryLasers = (player: Ship) => {
 
 const createLeftWingLaser = (player: Ship) => {
     const laserDirectionRatio = player.laserRange / player.distanceToCursor
-    player.lasers.push(
+    player.lasers.addParticule(
         new LinearParticule(
             { ...player.leftLaser },
             {
@@ -110,7 +110,7 @@ const createLeftWingLaser = (player: Ship) => {
 
 const createRightWingLaser = (player: Ship) => {
     const laserDirectionRatio = player.laserRange / player.distanceToCursor
-    player.lasers.push(
+    player.lasers.addParticule(
         new LinearParticule(
             { ...player.rightLaser },
             {

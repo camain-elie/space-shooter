@@ -5,8 +5,7 @@ import {
     getPerpendicularVector,
     inverseVector,
 } from "./Vector"
-import { LinearParticule } from "./Particules"
-import { Upgrade, initUpgrades } from "./Apgrade"
+import { Upgrade, initUpgrades } from "./Upgrade"
 import {
     CANVAS_HEIGHT,
     CANVAS_WIDTH,
@@ -21,6 +20,7 @@ import {
     SHIP_WIDTH,
 } from "./Constants"
 import { SpecialUpgrade, hasSpecialUpgrade } from "./SpecialUpgrade"
+import { ParticuleCollection } from "./ParticuleCollection"
 
 class Ship {
     coordinates: Coordinates
@@ -39,7 +39,7 @@ class Ship {
     firing: boolean
     laserRate: number
     laserRange: number
-    lasers: LinearParticule[]
+    lasers: ParticuleCollection
     invincibilityTime: number
     invincibilityLeft: number
     lives: number
@@ -92,7 +92,7 @@ class Ship {
         this.firing = false
         this.laserRate = LASER_SHOOTING_RATE
         this.laserRange = LASER_RANGE
-        this.lasers = []
+        this.lasers = new ParticuleCollection()
         this.invincibilityTime = INVINCIBILITY_TIME
         this.invincibilityLeft = 0
         this.lives = NUMBER_OF_LIVES
