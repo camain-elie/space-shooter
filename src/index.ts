@@ -11,13 +11,12 @@ import { timeString, startTimer, stopTimer, resetTimer } from "./Timer"
 import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    SHIP_LENGTH,
-    SHIP_WIDTH,
     ASTEROID_PARTICULE_LENGTH,
     REFRESH_INTERVAL,
     SHIELD_RELOAD_TIME,
     LASER_SHOT_LENGTH,
     LASER_SHOT_SPEED,
+    NEXT_LEVEL_XP,
 } from "./Constants"
 import { Asteroid } from "./Asteroid"
 import {
@@ -30,13 +29,18 @@ import {
 import { menuBoxesPosition, renderMenu } from "./Menu"
 import { AsteroidBelt } from "./AsteroidBelt"
 import { ParticuleCollection } from "./ParticuleCollection"
+import {
+    drawAsteroidNumber,
+    drawCursor,
+    drawRemainingLives,
+    drawTimer,
+    drawWave,
+    drawXpBar,
+} from "./UI"
 
 // Game constants
 const NEW_GAME_DELAY = 2
 const MENU_CHOICE_DELAY = 1
-const XP_BAR_LENGTH = 300
-const XP_BAR_HEIGHT = 10
-const NEXT_LEVEL_XP = 30
 
 let currentInterval = 0
 let wave = 1
@@ -172,66 +176,12 @@ const turnOffUpgradeMenu = () => {
 // DRAW
 const drawUIElements = () => {
     if (context) {
-        const { x, y } = cursorPosition
-
-        // draw the wave
-        context.textAlign = "left"
-        context.fillStyle = "white"
-        context.font = "16px sans-serif"
-        context.fillText(`Wave ${wave}`, 20, 25)
-
-        // draw the number of remaining asteroids
-        context.fillText(`Remaining : ${asteroids.getNumber()}`, 20, 45)
-
-        // draw the cursor
-        context.fillRect(x, y, 1, 1)
-        context.fillRect(x, y - 10, 1, 5)
-        context.fillRect(x + 6, y, 5, 1)
-        context.fillRect(x, y + 6, 1, 5)
-        context.fillRect(x - 10, y, 5, 1)
-
-        // draw number of lives
-        for (let i = 0; i < player.lives; i++)
-            drawShipSprite(CANVAS_WIDTH - 2 * (i + 1) * SHIP_WIDTH, 15)
-
-        // draw xp bar
-        context.strokeRect(
-            CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
-            20,
-            XP_BAR_LENGTH,
-            XP_BAR_HEIGHT
-        )
-        const xpRatioLenght =
-            (player.xp * XP_BAR_LENGTH) / (player.level * NEXT_LEVEL_XP)
-        let xpFillLength =
-            xpRatioLenght > XP_BAR_LENGTH ? XP_BAR_LENGTH : xpRatioLenght
-        context.fillRect(
-            CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
-            20,
-            xpFillLength,
-            XP_BAR_HEIGHT
-        )
-        context.textAlign = "center"
-        context.fillText(
-            `level ${player.level}`,
-            CANVAS_WIDTH / 2,
-            40 + XP_BAR_HEIGHT
-        )
-
-        // draw the timer
-        context.textAlign = "left"
-        context.fillText(`${timeString}`, 20, CANVAS_HEIGHT - 20)
-    }
-}
-
-const drawShipSprite = (x: number, y: number) => {
-    if (context) {
-        context.beginPath()
-        context.moveTo(x, y)
-        context.lineTo(x + SHIP_WIDTH / 2, y + SHIP_LENGTH)
-        context.lineTo(x - SHIP_WIDTH / 2, y + SHIP_LENGTH)
-        context.lineTo(x, y)
-        context.stroke()
+        drawWave(context, wave)
+        drawAsteroidNumber(context, asteroids.getNumber())
+        drawCursor(context, cursorPosition)
+        drawRemainingLives(context, player.lives)
+        drawXpBar(context, player)
+        drawTimer(context, timeString)
     }
 }
 
