@@ -70,7 +70,7 @@ const drawXpBar = (context: CanvasRenderingContext2D, player: Ship) => {
     )
     const xpRatioLenght =
         (player.xp * XP_BAR_LENGTH) / (player.level * NEXT_LEVEL_XP)
-    let xpFillLength =
+    const xpFillLength =
         xpRatioLenght > XP_BAR_LENGTH ? XP_BAR_LENGTH : xpRatioLenght
     context.fillRect(
         CANVAS_WIDTH / 2 - XP_BAR_LENGTH / 2,
@@ -91,6 +91,47 @@ const drawTimer = (context: CanvasRenderingContext2D, timeString: string) => {
     context.fillText(timeString, 20, CANVAS_HEIGHT - 20)
 }
 
+const getLines = (
+    context: CanvasRenderingContext2D,
+    text: string,
+    maxWidth: number
+) => {
+    const words = text.split(" ")
+    const lines: string[] = []
+    let currentLine = words[0]
+
+    for (let i = 1; i < words.length; i++) {
+        const word = words[i]
+        const width = context.measureText(currentLine + " " + word).width
+        if (width < maxWidth) {
+            currentLine += " " + word
+        } else {
+            lines.push(currentLine)
+            currentLine = word
+        }
+    }
+    lines.push(currentLine)
+    return lines
+}
+
+const multiLineFillText = (
+    context: CanvasRenderingContext2D,
+    text: string,
+    position: Coordinates,
+    maxWidth: number,
+    lineHeight: number
+) => {
+    const lines = getLines(context, text, maxWidth)
+    lines.forEach((line, index) => {
+        context.fillText(
+            line,
+            position.x,
+            position.y + lineHeight * index,
+            maxWidth
+        )
+    })
+}
+
 export {
     drawWave,
     drawAsteroidNumber,
@@ -98,4 +139,5 @@ export {
     drawRemainingLives,
     drawXpBar,
     drawTimer,
+    multiLineFillText,
 }
