@@ -6,6 +6,7 @@ import {
 import { checkClickZone, menuBoxesPosition } from "./Menu"
 import { LinearParticule } from "./Particules"
 import { Ship } from "./Ship"
+import { multiLineFillText } from "./UI"
 import { Coordinates } from "./Vector"
 
 type SpecialUpgradeId = "leftWingLaser" | "rightWingLaser" | "shieldGenerator"
@@ -79,7 +80,13 @@ const renderSpecialUpgrade = (
     context.textAlign = "left"
     context.fillStyle = color
     context.fillText(name, x + 10, y + 30, MENU_UPGRADE_WIDTH - 20)
-    context.fillText(description, x + 10, y + 60, MENU_UPGRADE_WIDTH - 20)
+    multiLineFillText(
+        context,
+        description,
+        { x: x + 10, y: y + 70 },
+        MENU_UPGRADE_WIDTH - 20,
+        30
+    )
 }
 
 const handleSecondaryLasers = (player: Ship) => {

@@ -20,7 +20,7 @@ class ParticuleCollection {
         type: ParticuleType,
         position: Coordinates,
         maxSize: number,
-        maxOpacity: number = 1
+        maxOpacity = 1
     ) {
         for (let i = 0; i < number; i++) {
             const directionVector = {
