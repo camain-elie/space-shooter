@@ -10,6 +10,7 @@ import {
 } from "./Constants"
 import { Coordinates } from "./Vector"
 import { checkClickZone, menuBoxesPosition } from "./Menu"
+import { multiLineFillText } from "./UI"
 
 type UpgradeId =
     | "invincibilityTime"
@@ -136,18 +137,24 @@ const renderUpgradeToString = (
     context.textAlign = "left"
     context.fillStyle = color
     context.fillText(name, x + 10, y + 30, MENU_UPGRADE_WIDTH - 20)
-    context.fillText(description, x + 10, y + 60, MENU_UPGRADE_WIDTH - 20)
     context.fillText(
         `Current upgrade level : ${currentUpgrade}`,
         x + 10,
-        y + 90,
+        y + 70,
         MENU_UPGRADE_WIDTH - 20
     )
     context.fillText(
         `Max level : ${maxUpgrade}`,
         x + 10,
-        y + 120,
+        y + 100,
         MENU_UPGRADE_WIDTH - 20
+    )
+    multiLineFillText(
+        context,
+        description,
+        { x: x + 10, y: y + 140 },
+        MENU_UPGRADE_WIDTH - 20,
+        30
     )
 }
 
