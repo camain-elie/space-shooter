@@ -5,7 +5,7 @@ import {
     getPerpendicularVector,
     inverseVector,
 } from "./Vector"
-import { Upgrade, initUpgrades } from "./Upgrade"
+import { Upgrade } from "./Upgrade"
 import {
     CANVAS_HEIGHT,
     CANVAS_WIDTH,
@@ -21,6 +21,7 @@ import {
 } from "./Constants"
 import { SpecialUpgrade, hasSpecialUpgrade } from "./SpecialUpgrade"
 import { ParticuleCollection } from "./ParticuleCollection"
+import { UpgradeSystem } from "./UpgradeSystem"
 
 class Ship {
     coordinates: Coordinates
@@ -45,7 +46,7 @@ class Ship {
     lives: number
     level: number
     xp: number
-    upgrades: Upgrade[]
+    upgrades: UpgradeSystem
     upgradeChoice: Upgrade[]
     specialUpgrade: SpecialUpgrade[]
     specialUpgradeChoice: SpecialUpgrade[]
@@ -98,7 +99,7 @@ class Ship {
         this.lives = NUMBER_OF_LIVES
         this.level = 1
         this.xp = 0
-        this.upgrades = initUpgrades()
+        this.upgrades = new UpgradeSystem()
         this.upgradeChoice = []
         this.specialUpgrade = []
         this.specialUpgradeChoice = []
