@@ -1,13 +1,18 @@
 import {
-    CANVAS_HEIGHT,
+    CANVAS_SIDE_MARGIN,
     CANVAS_WIDTH,
+    JAUGE_COLOR,
     NEXT_LEVEL_XP,
     SHIP_LENGTH,
     SHIP_WIDTH,
+    UPGRADE_BUTTON_WIDTH,
+    UPGRADE_JAUGE_HEIGHT,
+    UPGRADE_JAUGE_LENGTH,
     XP_BAR_HEIGHT,
     XP_BAR_LENGTH,
 } from "./Constants"
 import { Ship } from "./Ship"
+import { Upgrade } from "./Upgrade"
 import { Coordinates } from "./Vector"
 
 const drawWave = (context: CanvasRenderingContext2D, wave: number) => {
@@ -88,7 +93,36 @@ const drawXpBar = (context: CanvasRenderingContext2D, player: Ship) => {
 
 const drawTimer = (context: CanvasRenderingContext2D, timeString: string) => {
     context.textAlign = "left"
-    context.fillText(timeString, 20, CANVAS_HEIGHT - 20)
+    context.fillText(timeString, 20, 65)
+}
+
+const drawUpgradeButton = (
+    context: CanvasRenderingContext2D,
+    upgrade: Upgrade
+) => {
+    const x = CANVAS_SIDE_MARGIN + UPGRADE_JAUGE_LENGTH,
+        y = upgrade.yPosition
+
+    context.beginPath()
+    // draw button border
+    context.roundRect(
+        x,
+        y,
+        UPGRADE_BUTTON_WIDTH,
+        UPGRADE_JAUGE_HEIGHT,
+        [0, 5, 5, 0]
+    )
+    // draw "+" symbol
+    context.fillRect(x + 5, y + UPGRADE_JAUGE_HEIGHT / 2 - 1, 10, 2)
+    context.fillRect(x + UPGRADE_BUTTON_WIDTH / 2 - 1, y + 5, 2, 10)
+    context.stroke()
+    // add "unable visual" to the button
+    if (upgrade.currentUpgrade === upgrade.maxUpgrade) {
+        context.fillStyle = JAUGE_COLOR
+        context.fillText("MAX", x + UPGRADE_BUTTON_WIDTH + 10, y + 15)
+        context.fill()
+    }
+    context.closePath()
 }
 
 const getLines = (
@@ -139,5 +173,6 @@ export {
     drawRemainingLives,
     drawXpBar,
     drawTimer,
+    drawUpgradeButton,
     multiLineFillText,
 }

@@ -1,11 +1,6 @@
 import { Ship } from "./Ship"
 import { Coordinates, getDistance } from "./Vector"
 import { BackgroundParticule, LinearParticule } from "./Particules"
-import {
-    handleUpgradeClick,
-    getUpgradeChoice,
-    renderUpgradeToString,
-} from "./Upgrade"
 import { timeString, startTimer, stopTimer, resetTimer } from "./Timer"
 
 import {
@@ -37,6 +32,7 @@ import {
     drawWave,
     drawXpBar,
 } from "./UI"
+import { Button } from "./Button"
 
 // Game constants
 const NEW_GAME_DELAY = 2
@@ -79,6 +75,8 @@ const asteroidParticules = new ParticuleCollection()
 const backgroundParticules = new ParticuleCollection()
 const explosionParticules = new ParticuleCollection()
 
+const buttonArray: Button[] = []
+
 // PLAYER MOVEMENTS
 const handleCursorMove = (ev: MouseEvent | TouchEvent) => {
     const rect = gameCanvas.getBoundingClientRect()
@@ -100,16 +98,21 @@ gameCanvas.onclick = () => {
     if (startGame) {
         startTimer()
         startGame = false
-    }
-    if (endGame && !newGameDelay) restartGame()
-    if (upgradeMenu && menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL) {
+    } else if (endGame && !newGameDelay) restartGame()
+    else if (
+        upgradeMenu &&
+        menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL &&
         isUpgradeSpecial()
-            ? handleSpecialUpgradeClick(
-                  cursorPosition,
-                  player,
-                  turnOffUpgradeMenu
-              )
-            : handleUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
+    ) {
+        handleSpecialUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
+    } else {
+        buttonArray.forEach((button) => {
+            if (
+                button.checkOnClick(cursorPosition) &&
+                !player.upgrades.getAvailableUpgrades()
+            )
+                buttonArray.length = 0
+        })
     }
 }
 
@@ -159,7 +162,16 @@ const handleXp = (asteroid: Asteroid) => {
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
         player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
-        player.upgradeChoice = getUpgradeChoice(player)
+        if (player.upgrades.getNumberOfTotalUpgrades() >= player.level - 1)
+            player.upgrades.increaseAvailableUpgrades()
+        if (
+            context &&
+            !buttonArray.length &&
+            player.upgrades.getAvailableUpgrades()
+        )
+            buttonArray.push(
+                ...player.upgrades.getUpgradeButtons(context, player)
+            )
         if (isUpgradeSpecial()) upgradeMenu = true
         else if (player.upgradeChoice.length) upgradeMenu = true
     }
@@ -182,6 +194,8 @@ const drawUIElements = () => {
         drawRemainingLives(context, player.lives)
         drawXpBar(context, player)
         drawTimer(context, timeString)
+        player.upgrades.draw(context)
+        buttonArray.forEach((button) => button.draw(context))
     }
 }
 
@@ -387,17 +401,6 @@ const renderUpgradeMenu = () => {
                 const { x, y } = menuBoxesPosition[index]
                 renderSpecialUpgrade(
                     specialUpgradeChoice[index],
-                    { x, y },
-                    color,
-                    context
-                )
-                context.closePath()
-            })
-        } else {
-            upgradeChoice.forEach((item, index) => {
-                const { x, y } = menuBoxesPosition[index]
-                renderUpgradeToString(
-                    upgradeChoice[index],
                     { x, y },
                     color,
                     context
