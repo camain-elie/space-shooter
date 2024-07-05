@@ -60,20 +60,34 @@ class Upgrade {
         for (let i = 0; i < this.maxUpgrade; i++) {
             const x = CANVAS_SIDE_MARGIN + i * upgradeWidth
 
-            if (this.currentUpgrade > i)
-                context.fillRect(
+            if (i === 0) {
+                context.beginPath()
+                context.roundRect(
+                    x,
+                    this.yPosition,
+                    upgradeWidth,
+                    UPGRADE_JAUGE_HEIGHT,
+                    [5, 0, 0, 5]
+                )
+                context.stroke()
+                if (this.currentUpgrade > i) context.fill()
+                context.closePath()
+            } else {
+                if (this.currentUpgrade > i)
+                    context.fillRect(
+                        x,
+                        this.yPosition,
+                        upgradeWidth,
+                        UPGRADE_JAUGE_HEIGHT
+                    )
+
+                context.strokeRect(
                     x,
                     this.yPosition,
                     upgradeWidth,
                     UPGRADE_JAUGE_HEIGHT
                 )
-
-            context.strokeRect(
-                x,
-                this.yPosition,
-                upgradeWidth,
-                UPGRADE_JAUGE_HEIGHT
-            )
+            }
         }
     }
 }
