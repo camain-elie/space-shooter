@@ -14,14 +14,6 @@ import {
     NEXT_LEVEL_XP,
 } from "./Constants"
 import { Asteroid } from "./Asteroid"
-import {
-    getSpecialUpgradesChoice,
-    handleSecondaryLasers,
-    handleSpecialUpgradeClick,
-    hasSpecialUpgrade,
-    renderSpecialUpgrade,
-} from "./SpecialUpgrade"
-import { menuBoxesPosition, renderMenu } from "./Menu"
 import { AsteroidBelt } from "./AsteroidBelt"
 import { ParticuleCollection } from "./ParticuleCollection"
 import {
@@ -36,15 +28,12 @@ import { Button } from "./Button"
 
 // Game constants
 const NEW_GAME_DELAY = 2
-const MENU_CHOICE_DELAY = 1
 
 let currentInterval = 0
 let wave = 1
 let startGame = true
 let endGame = false
 let isPaused = false
-let upgradeMenu = false
-let menuDelay = 0
 let newGameDelay = 0
 let laserTicking = 0
 
@@ -76,6 +65,7 @@ const backgroundParticules = new ParticuleCollection()
 const explosionParticules = new ParticuleCollection()
 
 const buttonArray: Button[] = []
+let hardwareButtons: Button[] = []
 
 // PLAYER MOVEMENTS
 const handleCursorMove = (ev: MouseEvent | TouchEvent) => {
@@ -99,19 +89,21 @@ gameCanvas.onclick = () => {
         startTimer()
         startGame = false
     } else if (endGame && !newGameDelay) restartGame()
-    else if (
-        upgradeMenu &&
-        menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL &&
-        isUpgradeSpecial()
-    ) {
-        handleSpecialUpgradeClick(cursorPosition, player, turnOffUpgradeMenu)
-    } else {
+    else {
         buttonArray.forEach((button) => {
             if (
                 button.checkOnClick(cursorPosition) &&
                 !player.upgrades.getAvailableUpgrades()
             )
                 buttonArray.length = 0
+        })
+        hardwareButtons.forEach((button) => {
+            if (button.checkOnClick(cursorPosition)) {
+                if (context && player.hardware.getAvailableUpgrades())
+                    hardwareButtons =
+                        player.hardware.getHardwareButtons(context)
+                else hardwareButtons.length = 0
+            }
         })
     }
 }
@@ -161,29 +153,29 @@ const handleXp = (asteroid: Asteroid) => {
         if (player.shieldReloadTime) player.shieldReloadTime--
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
-        player.specialUpgradeChoice = getSpecialUpgradesChoice(player)
-        if (player.upgrades.getNumberOfTotalUpgrades() >= player.level - 1)
-            player.upgrades.increaseAvailableUpgrades()
-        if (
-            context &&
-            !buttonArray.length &&
-            player.upgrades.getAvailableUpgrades()
-        )
-            buttonArray.push(
-                ...player.upgrades.getUpgradeButtons(context, player)
+        if (isUpgradeSpecial()) {
+            if (context && player.hardware.getAvailableUpgrades() === 0)
+                hardwareButtons.push(
+                    ...player.hardware.getHardwareButtons(context)
+                )
+            if (player.hardware.isRemainingUpgrade())
+                player.hardware.increaseAvailableUpgrades()
+        } else {
+            if (player.upgrades.getNumberOfTotalUpgrades() >= player.level - 1)
+                player.upgrades.increaseAvailableUpgrades()
+            if (
+                context &&
+                !buttonArray.length &&
+                player.upgrades.getAvailableUpgrades()
             )
-        if (isUpgradeSpecial()) upgradeMenu = true
-        else if (player.upgradeChoice.length) upgradeMenu = true
+                buttonArray.push(
+                    ...player.upgrades.getUpgradeButtons(context, player)
+                )
+        }
     }
 }
 
-const isUpgradeSpecial = () =>
-    player.level % 15 === 0 && player.specialUpgradeChoice.length
-
-const turnOffUpgradeMenu = () => {
-    upgradeMenu = false
-    menuDelay = 0
-}
+const isUpgradeSpecial = () => player.level % 15 === 0
 
 // DRAW
 const drawUIElements = () => {
@@ -195,7 +187,9 @@ const drawUIElements = () => {
         drawXpBar(context, player)
         drawTimer(context, timeString)
         player.upgrades.draw(context)
+        player.hardware.draw(context)
         buttonArray.forEach((button) => button.draw(context))
+        hardwareButtons.forEach((button) => button.draw(context))
     }
 }
 
@@ -253,7 +247,7 @@ const createNewLaser = () => {
                 LASER_SHOT_LENGTH
             )
         )
-        handleSecondaryLasers(player)
+        player.hardware.handleSecondaryLasers(player)
     }
 }
 
@@ -328,7 +322,7 @@ const detectPlayerCollision = () => {
                     getDistance(player.rightWing, asteroidPosition) < size)
             ) {
                 if (
-                    hasSpecialUpgrade(player, "shieldGenerator") &&
+                    player.hardware.hasHardware("shieldGenerator") &&
                     !player.shieldReloadTime
                 ) {
                     player.shieldReloadTime = SHIELD_RELOAD_TIME
@@ -366,59 +360,13 @@ const drawMessage = (
     }
 }
 
-const renderUpgradeMenu = () => {
-    menuDelay++
-    const { specialUpgradeChoice, upgradeChoice } = player
-    // render the background element without moving them
-    if (context) {
-        context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
-        asteroidParticules.draw(context)
-        asteroids.draw(context)
-        backgroundParticules.draw(context)
-        explosionParticules.draw(context)
-        player.lasers.draw(context)
-        player.draw(context, cursorPosition)
-        drawUIElements()
-
-        renderMenu(
-            context,
-            () => drawMessage("Choose an upgrade", false, 150),
-            isUpgradeSpecial()
-                ? specialUpgradeChoice.length
-                : upgradeChoice.length
-        )
-        const color =
-            menuDelay > MENU_CHOICE_DELAY * REFRESH_INTERVAL
-                ? "white"
-                : "rgba(255,255,255,0.5)"
-        if (isUpgradeSpecial()) {
-            renderMenu(
-                context,
-                () => drawMessage("Choose an upgrade", false, 150),
-                player.specialUpgradeChoice.length
-            )
-            specialUpgradeChoice.forEach((item, index) => {
-                const { x, y } = menuBoxesPosition[index]
-                renderSpecialUpgrade(
-                    specialUpgradeChoice[index],
-                    { x, y },
-                    color,
-                    context
-                )
-                context.closePath()
-            })
-        }
-    }
-}
-
 const draw = () => {
-    if (!isPaused && !upgradeMenu) {
+    if (!isPaused) {
         context?.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
         handleBackground()
         handleAsteroids()
         handleAsteroidParticules()
         handleExplosions()
-        drawUIElements()
         if (!endGame && !startGame) {
             handlePlayer()
             handleLasers()
@@ -437,15 +385,13 @@ const draw = () => {
                 )
             } else newGameDelay--
         }
+        drawUIElements()
 
         currentInterval++
         if (player.firing) laserTicking++
     } else if (isPaused) {
         drawMessage("Game paused")
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)
-    } else {
-        renderUpgradeMenu()
-        drawUIElements()
     }
 }
 
