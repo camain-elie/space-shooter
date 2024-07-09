@@ -118,6 +118,7 @@ const drawUpgradeButton = (
     context.stroke()
     // add "unable visual" to the button
     if (upgrade.currentUpgrade === upgrade.maxUpgrade) {
+        context.textAlign = "left"
         context.fillStyle = JAUGE_COLOR
         context.fillText("MAX", x + UPGRADE_BUTTON_WIDTH + 10, y + 15)
         context.fill()
