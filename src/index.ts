@@ -6,11 +6,8 @@ import { timeString, startTimer, stopTimer, resetTimer } from "./Timer"
 import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    ASTEROID_PARTICULE_LENGTH,
     REFRESH_INTERVAL,
     SHIELD_RELOAD_TIME,
-    LASER_SHOT_LENGTH,
-    LASER_SHOT_SPEED,
     NEXT_LEVEL_XP,
 } from "./Constants"
 import { Asteroid } from "./Asteroid"
@@ -333,7 +330,6 @@ const draw = () => {
         handleExplosions()
         if (!endGame && !startGame) {
             handlePlayer()
-            // console.log(player.firing, "firing")
             context && player.weapons.handleWeapons(context, player)
             calculateLasersCollision()
             detectPlayerCollision()
