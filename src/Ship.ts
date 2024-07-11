@@ -19,9 +19,9 @@ import {
     SHIP_MAX_SPEED,
     SHIP_WIDTH,
 } from "./Constants"
-import { SpecialUpgrade, hasSpecialUpgrade } from "./SpecialUpgrade"
 import { ParticuleCollection } from "./ParticuleCollection"
 import { UpgradeSystem } from "./UpgradeSystem"
+import { HardwareSystem } from "./HardwareSystem"
 
 class Ship {
     coordinates: Coordinates
@@ -47,9 +47,7 @@ class Ship {
     level: number
     xp: number
     upgrades: UpgradeSystem
-    upgradeChoice: Upgrade[]
-    specialUpgrade: SpecialUpgrade[]
-    specialUpgradeChoice: SpecialUpgrade[]
+    hardware: HardwareSystem
     shieldReloadTime: number
 
     constructor() {
@@ -100,9 +98,7 @@ class Ship {
         this.level = 1
         this.xp = 0
         this.upgrades = new UpgradeSystem()
-        this.upgradeChoice = []
-        this.specialUpgrade = []
-        this.specialUpgradeChoice = []
+        this.hardware = new HardwareSystem()
         this.shieldReloadTime = 0
     }
 
@@ -233,7 +229,7 @@ class Ship {
         context?.stroke()
 
         if (
-            hasSpecialUpgrade(this, "shieldGenerator") &&
+            this.hardware.hasHardware("shieldGenerator") &&
             !this.shieldReloadTime
         ) {
             context.beginPath()
