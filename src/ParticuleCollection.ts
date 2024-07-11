@@ -4,7 +4,7 @@ import {
     PARTICULE_MIN_SPEED,
 } from "./Constants"
 import { CircularParticule, LinearParticule } from "./Particules"
-import { Coordinates, getDistance } from "./Vector"
+import { Coordinates, getDistance, getRandomVector } from "./Vector"
 
 type ParticuleType = "linear" | "circular"
 
@@ -23,10 +23,7 @@ class ParticuleCollection {
         maxOpacity = 1
     ) {
         for (let i = 0; i < number; i++) {
-            const directionVector = {
-                    x: Math.random() * (10 + 10) - 10,
-                    y: Math.random() * 20 - 10,
-                },
+            const directionVector = getRandomVector(),
                 range = Math.random() * PARTICULE_MAX_RANGE,
                 speed =
                     Math.random() *
@@ -69,6 +66,10 @@ class ParticuleCollection {
             )
                 this.collection.splice(index, 1)
         })
+    }
+
+    reset() {
+        this.collection = []
     }
 
     draw(context: CanvasRenderingContext2D) {

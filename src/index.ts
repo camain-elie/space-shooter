@@ -25,6 +25,8 @@ import {
     drawXpBar,
 } from "./UI"
 import { Button } from "./Button"
+import { hardwareList } from "./HardwareSystem"
+import { createDamageParticules, createExplosion } from "./VFX"
 
 // Game constants
 const NEW_GAME_DELAY = 2
@@ -35,7 +37,6 @@ let startGame = true
 let endGame = false
 let isPaused = false
 let newGameDelay = 0
-let laserTicking = 0
 
 // TODO
 // Stop movement when mouse off canvas
@@ -108,16 +109,11 @@ gameCanvas.onclick = () => {
     }
 }
 
-const startFiring = () => (player.firing = true)
-gameCanvas.onmousedown = startFiring
-gameCanvas.ontouchstart = startFiring
+gameCanvas.onmousedown = () => player.startFiring()
+gameCanvas.ontouchstart = () => player.startFiring()
 
-const stopFiring = () => {
-    player.firing = false
-    laserTicking = 0
-}
-gameCanvas.onmouseup = stopFiring
-gameCanvas.ontouchend = stopFiring
+gameCanvas.onmouseup = () => player.stopFiring()
+gameCanvas.ontouchend = () => player.stopFiring()
 
 window.onkeydown = (event: KeyboardEvent) => {
     if (event.key.toLocaleLowerCase() === "p" && !startGame && !endGame) {
@@ -153,7 +149,7 @@ const handleXp = (asteroid: Asteroid) => {
         if (player.shieldReloadTime) player.shieldReloadTime--
         player.xp = player.xp - player.level * NEXT_LEVEL_XP
         player.level++
-        if (isUpgradeSpecial()) {
+        if (isUpgradeSpecial() && player.hardware.isRemainingUpgrade()) {
             if (context && player.hardware.getAvailableUpgrades() === 0)
                 hardwareButtons.push(
                     ...player.hardware.getHardwareButtons(context)
@@ -161,7 +157,11 @@ const handleXp = (asteroid: Asteroid) => {
             if (player.hardware.isRemainingUpgrade())
                 player.hardware.increaseAvailableUpgrades()
         } else {
-            if (player.upgrades.getNumberOfTotalUpgrades() >= player.level - 1)
+            if (
+                player.upgrades.getNumberOfTotalUpgrades() +
+                    hardwareList.length >=
+                player.level - 1
+            )
                 player.upgrades.increaseAvailableUpgrades()
             if (
                 context &&
@@ -200,55 +200,29 @@ const handlePlayer = () => {
     }
 }
 
-const handleLasers = () => {
-    player.lasers.update()
-    createNewLaser()
-    calculateLasersCollision()
-    if (context) player.lasers.draw(context)
-}
-
 const calculateLasersCollision = () => {
-    player.lasers.collection.forEach((laser, laserIndex) => {
+    player.weapons.lasers.collection.forEach((laser, laserIndex) => {
         asteroids.getBelt().forEach((asteroid, asteroidIndex) => {
             if (
                 getDistance(laser.position, asteroid.coordinates) <
                 asteroid.size
             ) {
-                player.lasers.collection.splice(laserIndex, 1)
+                player.weapons.lasers.collection.splice(laserIndex, 1)
                 if (asteroid.health > 1) {
                     asteroid.health--
-                    createParticules(laser.position)
+                    createDamageParticules(asteroidParticules, laser.position)
                 } else {
                     handleXp(asteroid)
-                    asteroids.destroyAsteroid(asteroidIndex, createParticules)
+                    asteroids.destroyAsteroid(asteroidIndex, () =>
+                        createDamageParticules(
+                            asteroidParticules,
+                            asteroid.coordinates
+                        )
+                    )
                 }
             }
         })
     })
-}
-
-const createNewLaser = () => {
-    const firingInterval = Math.floor(REFRESH_INTERVAL / player.laserRate)
-    if (player.firing && laserTicking % firingInterval === 0) {
-        const laserDirectionRatio = player.laserRange / player.distanceToCursor
-        player.lasers.addParticule(
-            new LinearParticule(
-                { ...player.coordinates },
-                {
-                    x:
-                        (player.directionVector.x - player.coordinates.x) *
-                        laserDirectionRatio,
-                    y:
-                        (player.directionVector.y - player.coordinates.y) *
-                        laserDirectionRatio,
-                },
-                player.laserRange,
-                LASER_SHOT_SPEED,
-                LASER_SHOT_LENGTH
-            )
-        )
-        player.hardware.handleSecondaryLasers(player)
-    }
 }
 
 const handleAsteroids = () => {
@@ -261,20 +235,6 @@ const handleAsteroids = () => {
 const handleAsteroidParticules = () => {
     asteroidParticules.update()
     if (context) asteroidParticules.draw(context)
-}
-
-const createParticules = (position: Coordinates, number = 10) => {
-    asteroidParticules.addRandomParticules(
-        number,
-        "linear",
-        position,
-        ASTEROID_PARTICULE_LENGTH
-    )
-}
-
-const createExplosion = (position: Coordinates) => {
-    createParticules(position, 50)
-    explosionParticules.addRandomParticules(30, "circular", position, 2, 0.8)
 }
 
 const handleExplosions = () => {
@@ -331,7 +291,11 @@ const detectPlayerCollision = () => {
                     player.lives--
                     if (player.lives > 0) player.startInvincibility()
                     else {
-                        createExplosion(player.coordinates)
+                        createExplosion(
+                            explosionParticules,
+                            player.coordinates,
+                            asteroidParticules
+                        )
                         endGame = true
                         stopTimer()
                         newGameDelay = NEW_GAME_DELAY * REFRESH_INTERVAL
@@ -369,7 +333,9 @@ const draw = () => {
         handleExplosions()
         if (!endGame && !startGame) {
             handlePlayer()
-            handleLasers()
+            // console.log(player.firing, "firing")
+            context && player.weapons.handleWeapons(context, player)
+            calculateLasersCollision()
             detectPlayerCollision()
         } else {
             drawMessage(
@@ -388,7 +354,6 @@ const draw = () => {
         drawUIElements()
 
         currentInterval++
-        if (player.firing) laserTicking++
     } else if (isPaused) {
         drawMessage("Game paused")
         drawMessage("Press P to resume", true, CANVAS_HEIGHT / 2 + 30)

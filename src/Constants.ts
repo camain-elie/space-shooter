@@ -48,6 +48,9 @@ const SHIP_LENGTH = 20
 const SHIP_MAX_SPEED = 3
 const SHIP_ACCELERATION = 3
 const SHIELD_RELOAD_TIME = 5
+const BOMB_RATE = 6
+const BOMB_EXPLOSION_DELAY = 3
+const BOMB_SIZE = 10
 
 // Asteroids constants
 const ASTEROID_MAX_SPEED = 100
@@ -86,6 +89,9 @@ export {
     SHIP_MAX_SPEED,
     SHIP_ACCELERATION,
     SHIELD_RELOAD_TIME,
+    BOMB_RATE,
+    BOMB_EXPLOSION_DELAY,
+    BOMB_SIZE,
 }
 
 export {
