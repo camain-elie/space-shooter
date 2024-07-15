@@ -26,6 +26,10 @@ const hardwareList = [
         id: "shieldGenerator" as HardwareId,
         name: "Shield generator",
     },
+    {
+        id: "delayedBomb" as HardwareId,
+        name: "Delayed bomb",
+    },
 ]
 
 class HardwareSystem {
@@ -97,14 +101,23 @@ class HardwareSystem {
     }
 
     generateChoice() {
-        if (this.remainingUpgrades.length <= 3)
-            this.hardwareChoice = [...this.remainingUpgrades]
+        this.hardwareChoice = []
+        const availableHardware = [...this.remainingUpgrades]
+        for (let i = 0; i < 3; i++) {
+            if (availableHardware.length) {
+                const randomIndex = Math.floor(
+                    Math.random() * availableHardware.length
+                )
+                this.hardwareChoice.push(availableHardware[randomIndex])
+                availableHardware.splice(randomIndex, 1)
+            }
+        }
     }
 
     getHardwareButtons(context: CanvasRenderingContext2D) {
         this.generateChoice()
         const buttons: Button[] = []
-        this.remainingUpgrades.forEach((hardware, index) => {
+        this.hardwareChoice.forEach((hardware, index) => {
             const { x, y } = BOX_BOTTOM_POSITIONS[index]
             buttons.push(
                 new Button(
@@ -139,52 +152,6 @@ class HardwareSystem {
             MENU_UPGRADE_WIDTH
         )
     }
-
-    handleSecondaryLasers(player: Ship) {
-        if (this.hasHardware("leftWingLaser")) this.createLeftWingLaser(player)
-        if (this.hasHardware("rightWingLaser"))
-            this.createRightWingLaser(player)
-    }
-
-    createLeftWingLaser(player: Ship) {
-        const laserDirectionRatio = player.laserRange / player.distanceToCursor
-        player.lasers.addParticule(
-            new LinearParticule(
-                { ...player.leftLaser },
-                {
-                    x:
-                        (player.directionVector.x - player.leftLaser.x) *
-                        laserDirectionRatio,
-                    y:
-                        (player.directionVector.y - player.leftLaser.y) *
-                        laserDirectionRatio,
-                },
-                player.laserRange,
-                LASER_SHOT_SPEED,
-                LASER_SHOT_LENGTH
-            )
-        )
-    }
-
-    createRightWingLaser(player: Ship) {
-        const laserDirectionRatio = player.laserRange / player.distanceToCursor
-        player.lasers.addParticule(
-            new LinearParticule(
-                { ...player.rightLaser },
-                {
-                    x:
-                        (player.directionVector.x - player.rightLaser.x) *
-                        laserDirectionRatio,
-                    y:
-                        (player.directionVector.y - player.rightLaser.y) *
-                        laserDirectionRatio,
-                },
-                player.laserRange,
-                LASER_SHOT_SPEED,
-                LASER_SHOT_LENGTH
-            )
-        )
-    }
 }
 
-export { HardwareSystem }
+export { hardwareList, HardwareSystem }

@@ -5,7 +5,6 @@ import {
     getPerpendicularVector,
     inverseVector,
 } from "./Vector"
-import { Upgrade } from "./Upgrade"
 import {
     CANVAS_HEIGHT,
     CANVAS_WIDTH,
@@ -19,9 +18,9 @@ import {
     SHIP_MAX_SPEED,
     SHIP_WIDTH,
 } from "./Constants"
-import { ParticuleCollection } from "./ParticuleCollection"
 import { UpgradeSystem } from "./UpgradeSystem"
 import { HardwareSystem } from "./HardwareSystem"
+import { Weapons } from "./Weapons"
 
 class Ship {
     coordinates: Coordinates
@@ -37,10 +36,10 @@ class Ship {
     speed: number
     maxSpeed: number
     distanceToCursor: number
+    weapons: Weapons
     firing: boolean
     laserRate: number
     laserRange: number
-    lasers: ParticuleCollection
     invincibilityTime: number
     invincibilityLeft: number
     lives: number
@@ -88,10 +87,10 @@ class Ship {
         this.speed = 0
         this.maxSpeed = SHIP_MAX_SPEED
         this.distanceToCursor = 0
+        this.weapons = new Weapons()
         this.firing = false
         this.laserRate = LASER_SHOOTING_RATE
         this.laserRange = LASER_RANGE
-        this.lasers = new ParticuleCollection()
         this.invincibilityTime = INVINCIBILITY_TIME
         this.invincibilityLeft = 0
         this.lives = NUMBER_OF_LIVES
@@ -220,13 +219,13 @@ class Ship {
         context.translate(this.coordinates.x, this.coordinates.y)
         context.rotate(-shipRotation)
 
-        context?.beginPath()
+        context.beginPath()
 
-        context?.moveTo(-SHIP_LENGTH, -SHIP_WIDTH / 2)
-        context?.lineTo(0, 0)
-        context?.lineTo(-SHIP_LENGTH, SHIP_WIDTH / 2)
-        context?.closePath()
-        context?.stroke()
+        context.moveTo(-SHIP_LENGTH, -SHIP_WIDTH / 2)
+        context.lineTo(0, 0)
+        context.lineTo(-SHIP_LENGTH, SHIP_WIDTH / 2)
+        context.closePath()
+        context.stroke()
 
         if (
             this.hardware.hasHardware("shieldGenerator") &&
@@ -237,11 +236,11 @@ class Ship {
             context.strokeStyle = `rgba(255,255,255, ${
                 Math.random() * 0.3 + 0.3
             })`
-            context?.moveTo(-SHIP_LENGTH - 3, -SHIP_WIDTH / 2 - 4)
-            context?.lineTo(8, 0)
-            context?.lineTo(-SHIP_LENGTH - 3, SHIP_WIDTH / 2 + 4)
-            context?.closePath()
-            context?.stroke()
+            context.moveTo(-SHIP_LENGTH - 3, -SHIP_WIDTH / 2 - 4)
+            context.lineTo(8, 0)
+            context.lineTo(-SHIP_LENGTH - 3, SHIP_WIDTH / 2 + 4)
+            context.closePath()
+            context.stroke()
             context.strokeStyle = "white"
         }
 
@@ -254,6 +253,15 @@ class Ship {
         this.invincibilityLeft = Math.floor(
             this.invincibilityTime * REFRESH_INTERVAL
         )
+    }
+
+    startFiring() {
+        this.firing = true
+    }
+
+    stopFiring() {
+        this.firing = false
+        this.weapons.laserTicking = 0
     }
 }
 
