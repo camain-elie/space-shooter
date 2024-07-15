@@ -24,10 +24,16 @@ const getPerpendicularVector = (vector: Coordinates) => ({
     y: -vector.x,
 })
 
+const getRandomVector = () => ({
+    x: Math.random() * (20 + 20) - 20,
+    y: Math.random() * (20 + 20) - 20,
+})
+
 export {
     Coordinates,
     getDistance,
     inverseVector,
     changeVectorLength,
     getPerpendicularVector,
+    getRandomVector,
 }

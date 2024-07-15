@@ -7,7 +7,7 @@ import {
     GIGA_ASTEROID_SIZE,
     REFRESH_INTERVAL,
 } from "./Constants"
-import { Coordinates, getDistance } from "./Vector"
+import { Coordinates, getDistance, getRandomVector } from "./Vector"
 
 type AsteroidType = 1 | 2 | 3 | 4
 
@@ -53,10 +53,7 @@ class Asteroid {
         }
 
         this.coordinates = coordinates
-        this.relativeDirectionVector = {
-            x: Math.random() * (20 + 20) - 20,
-            y: Math.random() * (20 + 20) - 20,
-        }
+        this.relativeDirectionVector = getRandomVector()
         this.rotationSpeed = Math.random() * 4 - 2
         this.angle = 0
         this.speed = Math.random() * ASTEROID_MAX_SPEED

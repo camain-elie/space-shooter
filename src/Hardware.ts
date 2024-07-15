@@ -1,4 +1,8 @@
-type HardwareId = "leftWingLaser" | "rightWingLaser" | "shieldGenerator"
+type HardwareId =
+    | "leftWingLaser"
+    | "rightWingLaser"
+    | "shieldGenerator"
+    | "delayedBomb"
 
 class Hardware {
     id: HardwareId
