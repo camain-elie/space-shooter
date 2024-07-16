@@ -1,8 +1,10 @@
 import {
+    CANVAS_HEIGHT,
     CANVAS_SIDE_MARGIN,
     CANVAS_WIDTH,
     JAUGE_COLOR,
     NEXT_LEVEL_XP,
+    REFRESH_INTERVAL,
     SHIP_LENGTH,
     SHIP_WIDTH,
     UPGRADE_BUTTON_WIDTH,
@@ -126,6 +128,24 @@ const drawUpgradeButton = (
     context.closePath()
 }
 
+const drawMessage = (
+    context: CanvasRenderingContext2D,
+    message: string,
+    y: number = CANVAS_HEIGHT / 2,
+    flicker = false,
+    currentInterval = 0
+) => {
+    context.textAlign = "center"
+    context.font = "22px sans-serif"
+    context.fillStyle = flicker
+        ? `rgba( 255, 255, 255, ${
+              (currentInterval % (4 * REFRESH_INTERVAL)) /
+              (6 * REFRESH_INTERVAL)
+          })`
+        : "white"
+    context.fillText(message, CANVAS_WIDTH / 2, y)
+}
+
 const getLines = (
     context: CanvasRenderingContext2D,
     text: string,
@@ -175,5 +195,6 @@ export {
     drawXpBar,
     drawTimer,
     drawUpgradeButton,
+    drawMessage,
     multiLineFillText,
 }

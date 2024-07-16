@@ -41,6 +41,7 @@ const LASER_SHOOTING_RATE = 2
 const LASER_RANGE = 500
 const LASER_SHOT_SPEED = 1000
 const LASER_SHOT_LENGTH = 10
+const NEW_GAME_DELAY = 2
 
 // Ship constants
 const SHIP_WIDTH = 10
@@ -84,6 +85,7 @@ export {
     LASER_RANGE,
     LASER_SHOT_SPEED,
     LASER_SHOT_LENGTH,
+    NEW_GAME_DELAY,
     SHIP_WIDTH,
     SHIP_LENGTH,
     SHIP_MAX_SPEED,

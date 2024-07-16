@@ -186,6 +186,10 @@ class Ship {
         this.basePoint = { ...basePoint }
     }
 
+    isUpgradeSpecial() {
+        return this.level % 15 === 0 && this.hardware.isRemainingUpgrade()
+    }
+
     getOrientationVector(cursorPosition: Coordinates) {
         const shipVector: Coordinates = { x: 10, y: 0 }
         const cursorVector: Coordinates = {
