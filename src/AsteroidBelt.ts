@@ -1,6 +1,6 @@
 import { Asteroid, AsteroidType } from "./Asteroid"
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./Constants"
 import { Coordinates } from "./Vector"
+import { CANVAS_HEIGHT, CANVAS_WIDTH } from "./constants/canvas"
 
 class AsteroidBelt {
     belt: Asteroid[]

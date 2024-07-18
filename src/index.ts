@@ -1,4 +1,4 @@
-import { REFRESH_INTERVAL } from "./Constants"
+import { REFRESH_INTERVAL } from "./constants/game"
 import { Game } from "./Game"
 
 // @TODO

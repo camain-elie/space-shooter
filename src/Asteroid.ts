@@ -1,13 +1,12 @@
+import { Coordinates, getDistance, getRandomVector } from "./Vector"
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants/canvas"
 import {
-    ASTEROID_JAGGEDNESS,
+    GIGA_ASTEROID_SIZE,
     ASTEROID_MAX_SPEED,
     ASTEROID_SIZE,
-    CANVAS_HEIGHT,
-    CANVAS_WIDTH,
-    GIGA_ASTEROID_SIZE,
+    ASTEROID_JAGGEDNESS,
     REFRESH_INTERVAL,
-} from "./Constants"
-import { Coordinates, getDistance, getRandomVector } from "./Vector"
+} from "./constants/game"
 
 type AsteroidType = 1 | 2 | 3 | 4
 

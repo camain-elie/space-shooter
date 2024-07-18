@@ -1,14 +1,6 @@
 import { Asteroid } from "./Asteroid"
 import { AsteroidBelt } from "./AsteroidBelt"
 import { Button } from "./Button"
-import {
-    CANVAS_HEIGHT,
-    CANVAS_WIDTH,
-    NEW_GAME_DELAY,
-    NEXT_LEVEL_XP,
-    REFRESH_INTERVAL,
-    SHIELD_RELOAD_TIME,
-} from "./Constants"
 import { hardwareList } from "./HardwareSystem"
 import { ParticuleCollection } from "./ParticuleCollection"
 import { BackgroundParticule } from "./Particules"
@@ -25,6 +17,13 @@ import {
 } from "./UI"
 import { createDamageParticules, createExplosion } from "./VFX"
 import { Coordinates, getDistance } from "./Vector"
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants/canvas"
+import {
+    NEXT_LEVEL_XP,
+    NEW_GAME_DELAY,
+    REFRESH_INTERVAL,
+} from "./constants/game"
+import { SHIELD_RELOAD_TIME } from "./constants/ship"
 
 class Game {
     player: Ship

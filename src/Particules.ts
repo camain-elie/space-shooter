@@ -1,6 +1,7 @@
-import { CANVAS_HEIGHT, CANVAS_WIDTH, REFRESH_INTERVAL } from "./Constants"
 import { Ship } from "./Ship"
 import { Coordinates, getDistance } from "./Vector"
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants/canvas"
+import { REFRESH_INTERVAL } from "./constants/game"
 
 class Particule {
     position: Coordinates
