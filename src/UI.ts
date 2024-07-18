@@ -1,21 +1,19 @@
-import {
-    CANVAS_HEIGHT,
-    CANVAS_SIDE_MARGIN,
-    CANVAS_WIDTH,
-    JAUGE_COLOR,
-    NEXT_LEVEL_XP,
-    REFRESH_INTERVAL,
-    SHIP_LENGTH,
-    SHIP_WIDTH,
-    UPGRADE_BUTTON_WIDTH,
-    UPGRADE_JAUGE_HEIGHT,
-    UPGRADE_JAUGE_LENGTH,
-    XP_BAR_HEIGHT,
-    XP_BAR_LENGTH,
-} from "./Constants"
 import { Ship } from "./Ship"
 import { Upgrade } from "./Upgrade"
 import { Coordinates } from "./Vector"
+import {
+    CANVAS_WIDTH,
+    XP_BAR_LENGTH,
+    XP_BAR_HEIGHT,
+    CANVAS_SIDE_MARGIN,
+    UPGRADE_JAUGE_LENGTH,
+    UPGRADE_BUTTON_WIDTH,
+    UPGRADE_JAUGE_HEIGHT,
+    CANVAS_HEIGHT,
+    JAUGE_FILL_COLOR,
+} from "./constants/canvas"
+import { NEXT_LEVEL_XP, REFRESH_INTERVAL } from "./constants/game"
+import { SHIP_WIDTH, SHIP_LENGTH } from "./constants/ship"
 
 const drawWave = (context: CanvasRenderingContext2D, wave: number) => {
     context.textAlign = "left"
@@ -121,7 +119,7 @@ const drawUpgradeButton = (
     // add "unable visual" to the button
     if (upgrade.currentUpgrade === upgrade.maxUpgrade) {
         context.textAlign = "left"
-        context.fillStyle = JAUGE_COLOR
+        context.fillStyle = JAUGE_FILL_COLOR
         context.fillText("MAX", x + UPGRADE_BUTTON_WIDTH + 10, y + 15)
         context.fill()
     }

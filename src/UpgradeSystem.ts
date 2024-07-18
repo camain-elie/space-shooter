@@ -1,20 +1,22 @@
 import { Button } from "./Button"
-import {
-    CANVAS_HEIGHT,
-    CANVAS_SIDE_MARGIN,
-    INVINCIBILITY_TIME,
-    JAUGE_COLOR,
-    LASER_RANGE,
-    LASER_SHOOTING_RATE,
-    SHIP_ACCELERATION,
-    SHIP_MAX_SPEED,
-    UPGRADE_BUTTON_WIDTH,
-    UPGRADE_JAUGE_HEIGHT,
-    UPGRADE_JAUGE_LENGTH,
-} from "./Constants"
 import { Ship } from "./Ship"
 import { drawUpgradeButton } from "./UI"
 import { Upgrade, UpgradeId } from "./Upgrade"
+import {
+    CANVAS_HEIGHT,
+    CANVAS_SIDE_MARGIN,
+    UPGRADE_JAUGE_HEIGHT,
+    UPGRADE_JAUGE_LENGTH,
+    UPGRADE_BUTTON_WIDTH,
+    JAUGE_FILL_COLOR,
+} from "./constants/canvas"
+import {
+    INVINCIBILITY_TIME,
+    LASER_RANGE,
+    LASER_SHOOTING_RATE,
+    SHIP_MAX_SPEED,
+    SHIP_ACCELERATION,
+} from "./constants/ship"
 
 const upgradeList = [
     {
@@ -153,7 +155,7 @@ class UpgradeSystem {
                     CANVAS_SIDE_MARGIN -
                     (index + 1) * UPGRADE_JAUGE_HEIGHT -
                     index * 25
-                context.fillStyle = JAUGE_COLOR
+                context.fillStyle = JAUGE_FILL_COLOR
                 upgrade.draw(context)
                 context.fillText(upgrade.name, CANVAS_SIDE_MARGIN, y - 5)
             })

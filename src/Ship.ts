@@ -5,22 +5,21 @@ import {
     getPerpendicularVector,
     inverseVector,
 } from "./Vector"
-import {
-    CANVAS_HEIGHT,
-    CANVAS_WIDTH,
-    INVINCIBILITY_TIME,
-    LASER_RANGE,
-    LASER_SHOOTING_RATE,
-    NUMBER_OF_LIVES,
-    REFRESH_INTERVAL,
-    SHIP_ACCELERATION,
-    SHIP_LENGTH,
-    SHIP_MAX_SPEED,
-    SHIP_WIDTH,
-} from "./Constants"
 import { UpgradeSystem } from "./UpgradeSystem"
 import { HardwareSystem } from "./HardwareSystem"
 import { Weapons } from "./Weapons"
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants/canvas"
+import { REFRESH_INTERVAL } from "./constants/game"
+import {
+    SHIP_LENGTH,
+    SHIP_WIDTH,
+    SHIP_ACCELERATION,
+    SHIP_MAX_SPEED,
+    LASER_SHOOTING_RATE,
+    LASER_RANGE,
+    INVINCIBILITY_TIME,
+    NUMBER_OF_LIVES,
+} from "./constants/ship"
 
 class Ship {
     coordinates: Coordinates
@@ -95,7 +94,7 @@ class Ship {
         this.invincibilityLeft = 0
         this.lives = NUMBER_OF_LIVES
         this.level = 1
-        this.xp = 0
+        this.xp = 300000
         this.upgrades = new UpgradeSystem()
         this.hardware = new HardwareSystem()
         this.shieldReloadTime = 0

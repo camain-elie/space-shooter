@@ -1,16 +1,16 @@
+import { ParticuleCollection } from "./ParticuleCollection"
+import { CircularParticule, LinearParticule } from "./Particules"
+import { Ship } from "./Ship"
+import { createExplosion } from "./VFX"
+import { getRandomVector } from "./Vector"
+import { REFRESH_INTERVAL } from "./constants/game"
 import {
     BOMB_EXPLOSION_DELAY,
     BOMB_RATE,
     BOMB_SIZE,
     LASER_SHOT_LENGTH,
     LASER_SHOT_SPEED,
-    REFRESH_INTERVAL,
-} from "./Constants"
-import { ParticuleCollection } from "./ParticuleCollection"
-import { CircularParticule, LinearParticule } from "./Particules"
-import { Ship } from "./Ship"
-import { createExplosion } from "./VFX"
-import { getRandomVector } from "./Vector"
+} from "./constants/ship"
 
 type Side = "right" | "left"
 

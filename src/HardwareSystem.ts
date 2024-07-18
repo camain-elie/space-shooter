@@ -1,17 +1,16 @@
 import { Button } from "./Button"
-import {
-    BOX_BOTTOM_POSITIONS,
-    CANVAS_HEIGHT,
-    CANVAS_WIDTH,
-    LASER_SHOT_LENGTH,
-    LASER_SHOT_SPEED,
-    MENU_UPGRADE_MARGIN,
-    MENU_UPGRADE_WIDTH,
-} from "./Constants"
+
 import { Hardware, HardwareId } from "./Hardware"
 import { LinearParticule } from "./Particules"
 import { Ship } from "./Ship"
 import { Coordinates } from "./Vector"
+import {
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    BOX_BOTTOM_POSITIONS,
+    HARDWARE_BUTTON_MARGIN,
+    HARDWARE_BUTTON_WIDTH,
+} from "./constants/canvas"
 
 const hardwareList = [
     {
@@ -95,7 +94,10 @@ class HardwareSystem {
                     this.availableUpgrades > 1 ? "s" : ""
                 } available`,
                 CANVAS_WIDTH / 2,
-                CANVAS_HEIGHT - MENU_UPGRADE_MARGIN - MENU_UPGRADE_WIDTH - 10
+                CANVAS_HEIGHT -
+                    HARDWARE_BUTTON_MARGIN -
+                    HARDWARE_BUTTON_WIDTH -
+                    10
             )
         }
     }
@@ -122,8 +124,8 @@ class HardwareSystem {
             buttons.push(
                 new Button(
                     { x, y },
-                    MENU_UPGRADE_WIDTH,
-                    MENU_UPGRADE_WIDTH,
+                    HARDWARE_BUTTON_WIDTH,
+                    HARDWARE_BUTTON_WIDTH,
                     () => {
                         this.decreaseAvailableUpgrades()
                         this.addHardware(hardware.id)
@@ -142,14 +144,14 @@ class HardwareSystem {
         position: Coordinates
     ) {
         const { x, y } = position
-        context.clearRect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
-        context.strokeRect(x, y, MENU_UPGRADE_WIDTH, MENU_UPGRADE_WIDTH)
+        context.clearRect(x, y, HARDWARE_BUTTON_WIDTH, HARDWARE_BUTTON_WIDTH)
+        context.strokeRect(x, y, HARDWARE_BUTTON_WIDTH, HARDWARE_BUTTON_WIDTH)
         context.textAlign = "center"
         context.fillText(
             hardware.name,
-            x + MENU_UPGRADE_WIDTH / 2,
-            y + MENU_UPGRADE_WIDTH + 20,
-            MENU_UPGRADE_WIDTH
+            x + HARDWARE_BUTTON_WIDTH / 2,
+            y + HARDWARE_BUTTON_WIDTH + 20,
+            HARDWARE_BUTTON_WIDTH
         )
     }
 }
