@@ -94,7 +94,7 @@ class Ship {
         this.invincibilityLeft = 0
         this.lives = NUMBER_OF_LIVES
         this.level = 1
-        this.xp = 300000
+        this.xp = 0
         this.upgrades = new UpgradeSystem()
         this.hardware = new HardwareSystem()
         this.shieldReloadTime = 0
