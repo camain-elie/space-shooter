@@ -1,19 +1,19 @@
-import {
-    CANVAS_SIDE_MARGIN,
-    CANVAS_WIDTH,
-    JAUGE_COLOR,
-    NEXT_LEVEL_XP,
-    SHIP_LENGTH,
-    SHIP_WIDTH,
-    UPGRADE_BUTTON_WIDTH,
-    UPGRADE_JAUGE_HEIGHT,
-    UPGRADE_JAUGE_LENGTH,
-    XP_BAR_HEIGHT,
-    XP_BAR_LENGTH,
-} from "./Constants"
 import { Ship } from "./Ship"
 import { Upgrade } from "./Upgrade"
 import { Coordinates } from "./Vector"
+import {
+    CANVAS_WIDTH,
+    XP_BAR_LENGTH,
+    XP_BAR_HEIGHT,
+    CANVAS_SIDE_MARGIN,
+    UPGRADE_JAUGE_LENGTH,
+    UPGRADE_BUTTON_WIDTH,
+    UPGRADE_JAUGE_HEIGHT,
+    CANVAS_HEIGHT,
+    JAUGE_FILL_COLOR,
+} from "./constants/canvas"
+import { NEXT_LEVEL_XP, REFRESH_INTERVAL } from "./constants/game"
+import { SHIP_WIDTH, SHIP_LENGTH } from "./constants/ship"
 
 const drawWave = (context: CanvasRenderingContext2D, wave: number) => {
     context.textAlign = "left"
@@ -119,11 +119,29 @@ const drawUpgradeButton = (
     // add "unable visual" to the button
     if (upgrade.currentUpgrade === upgrade.maxUpgrade) {
         context.textAlign = "left"
-        context.fillStyle = JAUGE_COLOR
+        context.fillStyle = JAUGE_FILL_COLOR
         context.fillText("MAX", x + UPGRADE_BUTTON_WIDTH + 10, y + 15)
         context.fill()
     }
     context.closePath()
+}
+
+const drawMessage = (
+    context: CanvasRenderingContext2D,
+    message: string,
+    y: number = CANVAS_HEIGHT / 2,
+    flicker = false,
+    currentInterval = 0
+) => {
+    context.textAlign = "center"
+    context.font = "22px sans-serif"
+    context.fillStyle = flicker
+        ? `rgba( 255, 255, 255, ${
+              (currentInterval % (4 * REFRESH_INTERVAL)) /
+              (6 * REFRESH_INTERVAL)
+          })`
+        : "white"
+    context.fillText(message, CANVAS_WIDTH / 2, y)
 }
 
 const getLines = (
@@ -175,5 +193,6 @@ export {
     drawXpBar,
     drawTimer,
     drawUpgradeButton,
+    drawMessage,
     multiLineFillText,
 }

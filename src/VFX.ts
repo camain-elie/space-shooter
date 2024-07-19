@@ -1,6 +1,6 @@
-import { ASTEROID_PARTICULE_LENGTH } from "./Constants"
 import { ParticuleCollection } from "./ParticuleCollection"
 import { Coordinates } from "./Vector"
+import { ASTEROID_PARTICULE_LENGTH } from "./constants/game"
 
 const createExplosion = (
     circularSystem: ParticuleCollection,

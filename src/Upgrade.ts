@@ -1,10 +1,9 @@
 import { Ship } from "./Ship"
-
 import {
+    UPGRADE_JAUGE_LENGTH,
     CANVAS_SIDE_MARGIN,
     UPGRADE_JAUGE_HEIGHT,
-    UPGRADE_JAUGE_LENGTH,
-} from "./Constants"
+} from "./constants/canvas"
 
 type UpgradeId =
     | "invincibilityTime"

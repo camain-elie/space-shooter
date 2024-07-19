@@ -1,10 +1,10 @@
+import { CircularParticule, LinearParticule } from "./Particules"
+import { Coordinates, getDistance, getRandomVector } from "./Vector"
 import {
     PARTICULE_MAX_RANGE,
     PARTICULE_MAX_SPEED,
     PARTICULE_MIN_SPEED,
-} from "./Constants"
-import { CircularParticule, LinearParticule } from "./Particules"
-import { Coordinates, getDistance, getRandomVector } from "./Vector"
+} from "./constants/game"
 
 type ParticuleType = "linear" | "circular"
 
