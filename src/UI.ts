@@ -141,6 +141,7 @@ const drawMessage = (
               (6 * REFRESH_INTERVAL)
           })`
         : "white"
+    console.log(message, flicker, currentInterval, context.fillStyle)
     context.fillText(message, CANVAS_WIDTH / 2, y)
 }
 

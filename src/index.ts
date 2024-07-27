@@ -1,5 +1,6 @@
 import { REFRESH_INTERVAL } from "./constants/game"
 import { Game } from "./Game"
+import { SpaceShooter } from "./SpaceShooter"
 
 // @TODO
 // Stop movement when mouse off canvas
@@ -18,26 +19,29 @@ const gameCanvas =
     document.createElement("canvas")
 const context = gameCanvas.getContext("2d")
 
-const game = new Game()
+let spaceShooter: SpaceShooter | undefined
+if (context) spaceShooter = new SpaceShooter(gameCanvas, context)
 
-if (context) {
-    gameCanvas.onmousemove = (event: MouseEvent) =>
-        game.handleCursorMove(event, gameCanvas)
-    gameCanvas.ontouchmove = (event: TouchEvent) =>
-        game.handleCursorMove(event, gameCanvas)
+// const game = new Game()
 
-    gameCanvas.onclick = () => game.onClick(context)
+// if (context) {
+//     gameCanvas.onmousemove = (event: MouseEvent) =>
+//         game.handleCursorMove(event, gameCanvas)
+//     gameCanvas.ontouchmove = (event: TouchEvent) =>
+//         game.handleCursorMove(event, gameCanvas)
 
-    gameCanvas.onmousedown = () => game.player.startFiring()
-    gameCanvas.ontouchstart = () => game.player.startFiring()
+//     gameCanvas.onclick = () => game.onClick(context)
 
-    gameCanvas.onmouseup = () => game.player.stopFiring()
-    gameCanvas.ontouchend = () => game.player.stopFiring()
+//     gameCanvas.onmousedown = () => game.player.startFiring()
+//     gameCanvas.ontouchstart = () => game.player.startFiring()
 
-    window.onkeydown = (event: KeyboardEvent) => game.onKeyDown(event)
-}
+//     gameCanvas.onmouseup = () => game.player.stopFiring()
+//     gameCanvas.ontouchend = () => game.player.stopFiring()
+
+//     window.onkeydown = (event: KeyboardEvent) => game.onKeyDown(event)
+// }
 
 gameCanvas.oncontextmenu = (event: MouseEvent) => event.preventDefault()
 
-context &&
-    window.setInterval(() => game.draw(context, gameCanvas), REFRESH_INTERVAL)
+spaceShooter && window.setInterval(() => spaceShooter.draw(), REFRESH_INTERVAL)
+// window.setInterval(() => game.draw(context, gameCanvas), REFRESH_INTERVAL)

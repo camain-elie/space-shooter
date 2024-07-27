@@ -43,6 +43,7 @@ class Game {
 
     constructor() {
         this.player = new Ship()
+        // remove or change the cursor
         this.cursorPosition = { x: 0, y: 0 }
         this.asteroids = new AsteroidBelt()
         this.asteroidParticules = new ParticuleCollection()
@@ -328,21 +329,21 @@ class Game {
         }
     }
 
-    handleCursorMove(
-        ev: MouseEvent | TouchEvent,
-        gameCanvas: HTMLCanvasElement
-    ) {
-        const rect = gameCanvas.getBoundingClientRect()
-        let clientX, clientY
-        if (ev instanceof MouseEvent) {
-            ;({ clientX, clientY } = ev)
-        } else {
-            const touch = ev.touches[0]
-            ;({ clientX, clientY } = touch)
-        }
-        this.cursorPosition.x = clientX - rect.left
-        this.cursorPosition.y = clientY - rect.top
-    }
+    // handleCursorMove(
+    //     ev: MouseEvent | TouchEvent,
+    //     gameCanvas: HTMLCanvasElement
+    // ) {
+    //     const rect = gameCanvas.getBoundingClientRect()
+    //     let clientX, clientY
+    //     if (ev instanceof MouseEvent) {
+    //         ;({ clientX, clientY } = ev)
+    //     } else {
+    //         const touch = ev.touches[0]
+    //         ;({ clientX, clientY } = touch)
+    //     }
+    //     this.cursorPosition.x = clientX - rect.left
+    //     this.cursorPosition.y = clientY - rect.top
+    // }
 }
 
 export { Game }
